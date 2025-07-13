@@ -1,6 +1,5 @@
 # MaeRaiz
 
-Projeto inicial desenvolvido com **Next.js**, focado em estrutura limpa e escalável para aplicações front-end modernas. Utiliza a pasta `src/` para organizar o código de forma clara e modular.
 
 ## 🚀 Tecnologias utilizadas
 
