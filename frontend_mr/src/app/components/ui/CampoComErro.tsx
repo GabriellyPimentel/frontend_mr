@@ -15,3 +15,4 @@ export const CampoComErro: React.FC<CampoComErroProps> = ({ children, error }) =
       </div>
     )}
   </div>
+);
