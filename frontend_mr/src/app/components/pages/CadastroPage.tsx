@@ -1,15 +1,16 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { TipoFormulario } from '../../types';
 import { FormularioMaeSolo } from '../forms/FormularioMaeSolo';
 import { FormularioProfissional } from '../forms/FormularioProfissional';
 
 export const CadastroPage: React.FC = () => {
   const [tipoFormulario, setTipoFormulario] = useState<TipoFormulario>('mae');
+  const router = useRouter(); 
 
   const handleSuccess = () => {
-    // Criar um modal ou notificação mais elegante
     const modal = document.createElement('div');
     modal.innerHTML = `
       <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -126,9 +127,13 @@ export const CadastroPage: React.FC = () => {
         <div className="mt-8 text-center">
           <p className="text-gray-600 mb-4">
             Já tem uma conta? 
-            <a href="/login" className="font-semibold ml-1 hover:underline transition-colors" style={{color: '#4B6043'}}>
-              Faça login
-            </a>
+            <button 
+  onClick={() => router.push('/login')} // ajuste conforme o caminho da LoginPage
+  className="font-semibold ml-1 hover:underline transition-colors" 
+  style={{ color: '#4B6043' }}
+>
+  Faça login
+</button>
           </p>
           <div className="flex items-center justify-center gap-6 text-sm text-gray-500">
             <a href="/termos" className="hover:underline">Termos de Uso</a>

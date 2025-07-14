@@ -1,5 +1,5 @@
 import CadastroPage from './components/pages/CadastroPage';
 
-export default function Home() {
+export default function CadastroPageRoute() {
   return <CadastroPage />;
 }
