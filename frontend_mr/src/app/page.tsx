@@ -1,5 +1,7 @@
-import CadastroPage from './components/pages/CadastroPage';
+// import CadastroPage from './components/pages/CadastroPage';
+
+import MaeSoloForm from "./components/pages/MaePage";
 
 export default function CadastroPageRoute() {
-  return <CadastroPage />;
+  return <MaeSoloForm/>;
 }
