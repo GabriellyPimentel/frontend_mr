@@ -14,13 +14,13 @@ export const CadastroPage: React.FC = () => {
     const modal = document.createElement('div');
     modal.innerHTML = `
       <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-md mx-4 text-center">
-          <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span class="text-3xl">✅</span>
+        <div class="bg-white p-6 rounded-2xl shadow-2xl max-w-sm mx-4 text-center">
+          <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+            <span class="text-2xl">✅</span>
           </div>
-          <h3 class="text-xl font-bold text-gray-800 mb-2">Cadastro realizado com sucesso!</h3>
-          <p class="text-gray-600 mb-6">Seja bem-vindo(a) à nossa plataforma!</p>
-          <button onclick="this.parentElement.parentElement.remove()" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors">
+          <h3 class="text-lg font-bold text-gray-800 mb-2">Cadastro realizado com sucesso!</h3>
+          <p class="text-gray-600 mb-4 text-sm">Seja bem-vindo(a) à nossa plataforma!</p>
+          <button onclick="this.parentElement.parentElement.remove()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm">
             Continuar
           </button>
         </div>
@@ -30,25 +30,25 @@ export const CadastroPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen p-5" style={{backgroundColor: '#F9F4ED'}}>
-      {/* Header com gradiente */}
-      <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full mb-4 shadow-lg" style={{backgroundColor: '#A3B18A'}}>
-          <span className="text-4xl">🤝</span>
+    <div className="min-h-screen p-4" style={{backgroundColor: '#F9F4ED'}}>
+      {/* Header compacto */}
+      <div className="text-center mb-4">
+        <div className="inline-flex items-center justify-center w-14 h-14 rounded-full mb-2 shadow-lg" style={{backgroundColor: '#A3B18A'}}>
+          <span className="text-2xl">🤝</span>
         </div>
-        <h1 className="text-4xl font-bold mb-2" style={{color: '#4B6043'}}>
+        <h1 className="text-2xl font-bold mb-1" style={{color: '#4B6043'}}>
           Criar Conta
         </h1>
-        <p className="text-lg text-gray-600">Junte-se à nossa comunidade de apoio</p>
+        <p className="text-sm text-gray-600">Junte-se à nossa comunidade de apoio</p>
       </div>
 
-      <div className="max-w-2xl mx-auto">
-        {/* Container principal com sombra elegante */}
+      <div className="max-w-xl mx-auto">
+        {/* Container principal */}
         <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
-          {/* Abas redesenhadas */}
+          {/* Abas compactas */}
           <div className="flex border-b border-gray-100">
             <button 
-              className={`flex-1 py-6 px-8 font-semibold text-lg transition-all duration-300 flex items-center justify-center gap-3 relative ${
+              className={`flex-1 py-4 px-4 font-semibold text-sm transition-all duration-300 flex items-center justify-center gap-2 relative ${
                 tipoFormulario === 'mae' 
                   ? 'text-white transform scale-105' 
                   : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
@@ -69,7 +69,7 @@ export const CadastroPage: React.FC = () => {
                 }
               }}
             >
-              <span className="text-2xl">👩‍👧‍👦</span>
+              <span className="text-lg">👩‍👧‍👦</span>
               <span>Sou Mãe Solo</span>
               {tipoFormulario === 'mae' && (
                 <div className="absolute bottom-0 left-0 right-0 h-1 bg-white rounded-t-full"></div>
@@ -77,7 +77,7 @@ export const CadastroPage: React.FC = () => {
             </button>
             
             <button 
-              className={`flex-1 py-6 px-8 font-semibold text-lg transition-all duration-300 flex items-center justify-center gap-3 relative ${
+              className={`flex-1 py-4 px-4 font-semibold text-sm transition-all duration-300 flex items-center justify-center gap-2 relative ${
                 tipoFormulario === 'profissional' 
                   ? 'text-white transform scale-105' 
                   : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
@@ -98,7 +98,7 @@ export const CadastroPage: React.FC = () => {
                 }
               }}
             >
-              <span className="text-2xl">🩺</span>
+              <span className="text-lg">🩺</span>
               <span>Sou Profissional</span>
               {tipoFormulario === 'profissional' && (
                 <div className="absolute bottom-0 left-0 right-0 h-1 bg-white rounded-t-full"></div>
@@ -107,8 +107,7 @@ export const CadastroPage: React.FC = () => {
           </div>
 
           {/* Conteúdo dos formulários */}
-          <div className="p-8">
-            {/* Animação de transição */}
+          <div className="p-6">
             <div className="transition-all duration-300 ease-in-out">
               {tipoFormulario === 'mae' ? (
                 <div className="animate-fadeIn">
@@ -123,19 +122,19 @@ export const CadastroPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Footer com informações adicionais */}
-        <div className="mt-8 text-center">
-          <p className="text-gray-600 mb-4">
+        {/* Footer compacto */}
+        <div className="mt-4 text-center">
+          <p className="text-gray-600 mb-2 text-sm">
             Já tem uma conta? 
             <button 
-  onClick={() => router.push('/login')} // ajuste conforme o caminho da LoginPage
-  className="font-semibold ml-1 hover:underline transition-colors" 
-  style={{ color: '#4B6043' }}
->
-  Faça login
-</button>
+              onClick={() => router.push('/login')}
+              className="font-semibold ml-1 hover:underline transition-colors text-sm" 
+              style={{ color: '#4B6043' }}
+            >
+              Faça login
+            </button>
           </p>
-          <div className="flex items-center justify-center gap-6 text-sm text-gray-500">
+          <div className="flex items-center justify-center gap-4 text-xs text-gray-500">
             <a href="/termos" className="hover:underline">Termos de Uso</a>
             <span>•</span>
             <a href="/privacidade" className="hover:underline">Política de Privacidade</a>
@@ -145,7 +144,7 @@ export const CadastroPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Adicionar CSS personalizado para animações */}
+      {/* CSS personalizado para animações */}
       <style jsx>{`
         @keyframes fadeIn {
           from {
