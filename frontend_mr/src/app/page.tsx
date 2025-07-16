@@ -1,7 +1,6 @@
-
+// Pagina inicial que renderiza o cadastro page
 import CadastroPage from './components/pages/CadastroPage';
 
-// Pagina inicial que renderiza o cadastro page
 export default function Home() {
   return <CadastroPage />;
 }
@@ -13,3 +12,21 @@ export default function Home() {
 export default function CadastroPageRoute() {
   return <MaeSoloForm/>;
 } */
+// import CadastroPage from './components/pages/CadastroPage';
+//  export default function CadastroPageRoute(){
+//   return <CadastroPage/>
+//  }
+
+//  import MaeSoloForm from "./components/pages/MaePage";
+
+// export default function CadastroPageRoute() {
+//   return <MaeSoloForm/>;
+// }  
+
+// import ProfissionalPage from "./components/pages/ProfissionalPage";
+
+// export default function CadastroPageRoute(){
+//   return <ProfissionalPage/>
+// } 
+
+
