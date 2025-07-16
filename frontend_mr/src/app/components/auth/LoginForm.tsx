@@ -2,97 +2,80 @@
 
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
-
-// Simulação de dados de usuários cadastrados
-const mockUsers = [
-  {
-    id: 1,
-    email: 'maria@exemplo.com',
-    senha: '123456',
-    tipo: 'mae_solo',
-    nome: 'Maria Silva',
-    situacaoTrabalho: 'autonoma',
-  },
-  {
-    id: 2,
-    email: 'dr.joao@clinica.com',
-    senha: '123456',
-    tipo: 'profissional',
-    nome: 'Dr. João Santos',
-    profissao: 'pediatra',
-    registro: 'CRM-SP 123456',
-  },
-];
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { schemaLogin } from '../../lib/validations/schemas';
+import { LoginData, User } from '../../types';
+import { login } from '../../services/api';
+import { CampoComErro } from '../ui/CampoComErro';
+import { LoadingSpinner } from '../ui/LoadingSpinner';
 
 export const LoginForm = () => {
-  const router = useRouter(); // CORREÇÃO: Mover para dentro do componente
+  const router = useRouter();
   const [loginStep, setLoginStep] = useState<'login' | 'dashboard'>('login');
-  const [currentUser, setCurrentUser] = useState<any>(null);
-  const [formData, setFormData] = useState({ email: '', senha: '' });
-  const [formErrors, setFormErrors] = useState<{ email?: string; senha?: string }>({});
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loginError, setLoginError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
 
-  // Validação dos campos
-  const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+    setValue
+  } = useForm<LoginData>({
+    resolver: zodResolver(schemaLogin)
+  });
 
-  const validateForm = () => {
-    const errors: typeof formErrors = {};
-
-    if (!formData.email) errors.email = 'Email é obrigatório';
-    else if (!validateEmail(formData.email)) errors.email = 'Email inválido';
-
-    if (!formData.senha) errors.senha = 'Senha é obrigatória';
-    else if (formData.senha.length < 6) errors.senha = 'Senha muito curta';
-
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
+  // 🔄 Função para formatar CPF enquanto digita
+  const formatCPF = (value: string) => {
+    const numbers = value.replace(/\D/g, '');
+    if (numbers.length <= 11) {
+      return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+    }
+    return value;
   };
 
-  // Simulação de autenticação
-  const authenticateUser = async (email: string, senha: string) => {
-    setIsLoading(true);
-    setLoginError('');
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    const user = mockUsers.find(u => u.email === email && u.senha === senha);
-
-    if (user) {
-      setCurrentUser(user);
+  const onSubmit = async (data: LoginData) => {
+    try {
+      setLoginError('');
+      
+      // 🔄 Login real com a API
+      const user = await login(data.cpf, data.senha);
+      
+      // Criar objeto user padronizado
+      const userData: User = {
+        id: user.id,
+        cpf: data.cpf,
+        nome: user.nome || 'Usuário',
+        email: user.email,
+        telefone: user.telefone,
+        tipo: user.MaeSolo ? 'mae_solo' : 'profissional',
+        endereco: user.MaeSolo?.endereco,
+        situacaoTrabalho: user.MaeSolo?.situacaoTrabalho ? 'Empregada' : 'Desempregada',
+        areaAtuacao: user.ProfissionalApoio?.areaAtuacao,
+        dataNascimento: user.MaeSolo?.data_nascimento,
+        rendaMensal: user.MaeSolo?.rendaMensal,
+        escolaridade: user.MaeSolo?.escolaridade
+      };
+      
+      setCurrentUser(userData);
       setLoginStep('dashboard');
-    } else {
-      setLoginError('Email ou senha incorretos');
-    }
-
-    setIsLoading(false);
-  };
-
-  const handleInputChange = (field: 'email' | 'senha', value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    if (formErrors[field]) {
-      setFormErrors(prev => ({ ...prev, [field]: '' }));
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (validateForm()) {
-      await authenticateUser(formData.email, formData.senha);
+    } catch (error: any) {
+      setLoginError(error.message || 'Erro ao fazer login');
     }
   };
 
   const handleLogout = () => {
     setLoginStep('login');
     setCurrentUser(null);
-    setFormData({ email: '', senha: '' });
-    setFormErrors({});
+    reset();
     setLoginError('');
   };
 
   // Dashboard pós login
-  const Dashboard = ({ user }: { user: any }) => {
+  const Dashboard = ({ user }: { user: User }) => {
     const isMaeSolo = user.tipo === 'mae_solo';
-    const themeColor = '#4B6043';
+    const themeColor = isMaeSolo ? '#4B6043' : '#B17853';
     const icon = isMaeSolo ? '👩‍👧‍👦' : '🩺';
 
     return (
@@ -106,7 +89,7 @@ export const LoginForm = () => {
                 </div>
                 <div>
                   <h1 className="text-xl font-bold" style={{ color: themeColor }}>
-                    Bem-vinda, {user.nome}!
+                    Bem-vindo(a), {user.nome.split(' ')[0]}!
                   </h1>
                   <p className="text-gray-600">
                     {isMaeSolo ? 'Mãe Solo' : 'Profissional'}
@@ -129,12 +112,32 @@ export const LoginForm = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-1" style={{ color: themeColor }}>
-                  Email
+                  CPF
                 </label>
                 <p className="text-gray-900 p-3 rounded-lg" style={{ backgroundColor: '#F9F4ED' }}>
-                  {user.email}
+                  {user.cpf}
                 </p>
               </div>
+              {user.email && (
+                <div>
+                  <label className="block text-sm font-medium mb-1" style={{ color: themeColor }}>
+                    Email
+                  </label>
+                  <p className="text-gray-900 p-3 rounded-lg" style={{ backgroundColor: '#F9F4ED' }}>
+                    {user.email}
+                  </p>
+                </div>
+              )}
+              {user.telefone && (
+                <div>
+                  <label className="block text-sm font-medium mb-1" style={{ color: themeColor }}>
+                    Telefone
+                  </label>
+                  <p className="text-gray-900 p-3 rounded-lg" style={{ backgroundColor: '#F9F4ED' }}>
+                    {user.telefone}
+                  </p>
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium mb-1" style={{ color: themeColor }}>
                   Tipo de Conta
@@ -144,32 +147,60 @@ export const LoginForm = () => {
                 </p>
               </div>
               {isMaeSolo ? (
-                <div>
-                  <label className="block text-sm font-medium mb-1" style={{ color: themeColor }}>
-                    Situação de Trabalho
-                  </label>
-                  <p className="text-gray-900 p-3 rounded-lg" style={{ backgroundColor: '#F9F4ED' }}>
-                    {user.situacaoTrabalho}
-                  </p>
-                </div>
+                <>
+                  {user.endereco && (
+                    <div>
+                      <label className="block text-sm font-medium mb-1" style={{ color: themeColor }}>
+                        Endereço
+                      </label>
+                      <p className="text-gray-900 p-3 rounded-lg" style={{ backgroundColor: '#F9F4ED' }}>
+                        {user.endereco}
+                      </p>
+                    </div>
+                  )}
+                  {user.situacaoTrabalho && (
+                    <div>
+                      <label className="block text-sm font-medium mb-1" style={{ color: themeColor }}>
+                        Situação de Trabalho
+                      </label>
+                      <p className="text-gray-900 p-3 rounded-lg" style={{ backgroundColor: '#F9F4ED' }}>
+                        {user.situacaoTrabalho}
+                      </p>
+                    </div>
+                  )}
+                  {user.rendaMensal && (
+                    <div>
+                      <label className="block text-sm font-medium mb-1" style={{ color: themeColor }}>
+                        Renda Mensal
+                      </label>
+                      <p className="text-gray-900 p-3 rounded-lg" style={{ backgroundColor: '#F9F4ED' }}>
+                        R$ {user.rendaMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                  )}
+                  {user.escolaridade && (
+                    <div>
+                      <label className="block text-sm font-medium mb-1" style={{ color: themeColor }}>
+                        Escolaridade
+                      </label>
+                      <p className="text-gray-900 p-3 rounded-lg" style={{ backgroundColor: '#F9F4ED' }}>
+                        {user.escolaridade}
+                      </p>
+                    </div>
+                  )}
+                </>
               ) : (
                 <>
-                  <div>
-                    <label className="block text-sm font-medium mb-1" style={{ color: themeColor }}>
-                      Profissão
-                    </label>
-                    <p className="text-gray-900 p-3 rounded-lg" style={{ backgroundColor: '#F9F4ED' }}>
-                      {user.profissao}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1" style={{ color: themeColor }}>
-                      Registro Profissional
-                    </label>
-                    <p className="text-gray-900 p-3 rounded-lg" style={{ backgroundColor: '#F9F4ED' }}>
-                      {user.registro}
-                    </p>
-                  </div>
+                  {user.areaAtuacao && (
+                    <div>
+                      <label className="block text-sm font-medium mb-1" style={{ color: themeColor }}>
+                        Área de Atuação
+                      </label>
+                      <p className="text-gray-900 p-3 rounded-lg" style={{ backgroundColor: '#F9F4ED' }}>
+                        {user.areaAtuacao}
+                      </p>
+                    </div>
+                  )}
                 </>
               )}
             </div>
@@ -192,80 +223,78 @@ export const LoginForm = () => {
               <h2 className="text-2xl font-bold mb-2" style={{ color: '#4B6043' }}>
                 Entrar na sua conta
               </h2>
-              <p className="text-gray-600">Bem-vindo de volta! Faça login para acessar sua conta</p>
+              <p className="text-gray-600">Digite seu CPF e senha para acessar</p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div className="space-y-2">
                 <label className="block text-sm font-medium" style={{ color: '#4B6043' }}>
-                  Email
+                  CPF
                 </label>
-                <input
-                  type="email"
-                  required
-                  placeholder="Digite seu email"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
-                  className={`w-full p-4 border-2 rounded-xl text-base outline-none transition-all duration-200 ${
-                    formErrors.email ? 'border-red-400 bg-red-50' : 'border-gray-200 bg-white'
-                  }`}
-                  style={{
-                    borderColor: formErrors.email ? '#ef4444' : '#e5e7eb',
-                    backgroundColor: formErrors.email ? '#fef2f2' : '#ffffff' // INVERTIDO: Estado inicial branco
-                  }}
-                  // Handlers para mudança de cor no focus/blur (cores invertidas)
-                  onFocus={(e) => {
-                    if (!formErrors.email) {
-                      e.target.style.borderColor = '#4B6043';
-                      e.target.style.backgroundColor = '#F9F4ED'; // INVERTIDO: Focus com fundo bege
-                    }
-                  }}
-                  onBlur={(e) => {
-                    if (!formErrors.email) {
-                      e.target.style.borderColor = '#e5e7eb';
-                      e.target.style.backgroundColor = '#ffffff'; // INVERTIDO: Blur com fundo branco
-                    }
-                  }}
-                />
-                {formErrors.email && (
-                  <p className="text-red-500 text-sm mt-1">{formErrors.email}</p>
-                )}
+                <CampoComErro error={errors.cpf?.message}>
+                  <input
+                    type="text"
+                    placeholder="000.000.000-00"
+                    maxLength={14}
+                    {...register('cpf')}
+                    onChange={(e) => {
+                      const formatted = formatCPF(e.target.value);
+                      e.target.value = formatted;
+                      setValue('cpf', formatted);
+                    }}
+                    className={`w-full p-4 border-2 rounded-xl text-base outline-none transition-all duration-200 ${
+                      errors.cpf ? 'border-red-400 bg-red-50' : 'border-gray-200 bg-white'
+                    }`}
+                    style={{
+                      borderColor: errors.cpf ? '#ef4444' : '#e5e7eb',
+                      backgroundColor: errors.cpf ? '#fef2f2' : '#ffffff'
+                    }}
+                    onFocus={(e) => {
+                      if (!errors.cpf) {
+                        e.target.style.borderColor = '#4B6043';
+                        e.target.style.backgroundColor = '#F9F4ED';
+                      }
+                    }}
+                    onBlur={(e) => {
+                      if (!errors.cpf) {
+                        e.target.style.borderColor = '#e5e7eb';
+                        e.target.style.backgroundColor = '#ffffff';
+                      }
+                    }}
+                  />
+                </CampoComErro>
               </div>
 
               <div className="space-y-2">
                 <label className="block text-sm font-medium" style={{ color: '#4B6043' }}>
                   Senha
                 </label>
-                <input
-                  type="password"
-                  required
-                  placeholder="Digite sua senha"
-                  value={formData.senha}
-                  onChange={(e) => handleInputChange('senha', e.target.value)}
-                  className={`w-full p-4 border-2 rounded-xl text-base outline-none transition-all duration-200 ${
-                    formErrors.senha ? 'border-red-400 bg-red-50' : 'border-gray-200 bg-white'
-                  }`}
-                  style={{
-                    borderColor: formErrors.senha ? '#ef4444' : '#e5e7eb',
-                    backgroundColor: formErrors.senha ? '#fef2f2' : '#ffffff' // INVERTIDO: Estado inicial branco
-                  }}
-                  // Handlers para mudança de cor no focus/blur (cores invertidas)
-                  onFocus={(e) => {
-                    if (!formErrors.senha) {
-                      e.target.style.borderColor = '#4B6043';
-                      e.target.style.backgroundColor = '#F9F4ED'; // INVERTIDO: Focus com fundo bege
-                    }
-                  }}
-                  onBlur={(e) => {
-                    if (!formErrors.senha) {
-                      e.target.style.borderColor = '#e5e7eb';
-                      e.target.style.backgroundColor = '#ffffff'; // INVERTIDO: Blur com fundo branco
-                    }
-                  }}
-                />
-                {formErrors.senha && (
-                  <p className="text-red-500 text-sm mt-1">{formErrors.senha}</p>
-                )}
+                <CampoComErro error={errors.senha?.message}>
+                  <input
+                    type="password"
+                    placeholder="Digite sua senha"
+                    {...register('senha')}
+                    className={`w-full p-4 border-2 rounded-xl text-base outline-none transition-all duration-200 ${
+                      errors.senha ? 'border-red-400 bg-red-50' : 'border-gray-200 bg-white'
+                    }`}
+                    style={{
+                      borderColor: errors.senha ? '#ef4444' : '#e5e7eb',
+                      backgroundColor: errors.senha ? '#fef2f2' : '#ffffff'
+                    }}
+                    onFocus={(e) => {
+                      if (!errors.senha) {
+                        e.target.style.borderColor = '#4B6043';
+                        e.target.style.backgroundColor = '#F9F4ED';
+                      }
+                    }}
+                    onBlur={(e) => {
+                      if (!errors.senha) {
+                        e.target.style.borderColor = '#e5e7eb';
+                        e.target.style.backgroundColor = '#ffffff';
+                      }
+                    }}
+                  />
+                </CampoComErro>
               </div>
 
               {loginError && (
@@ -277,20 +306,20 @@ export const LoginForm = () => {
               <div className="pt-6">
                 <button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isSubmitting}
                   className={`w-full py-4 px-6 rounded-xl text-white font-semibold text-base transition-all duration-200 flex items-center justify-center gap-3 shadow-lg ${
-                    isLoading
+                    isSubmitting
                       ? 'bg-gray-400 cursor-not-allowed transform scale-95'
                       : 'transform hover:scale-105 hover:shadow-xl active:scale-95'
                   }`}
                   style={{
-                    backgroundColor: isLoading ? '#9ca3af' : '#4B6043',
-                    boxShadow: isLoading ? 'none' : '0 4px 6px rgba(75, 96, 67, 0.2)',
+                    backgroundColor: isSubmitting ? '#9ca3af' : '#4B6043',
+                    boxShadow: isSubmitting ? 'none' : '0 4px 6px rgba(75, 96, 67, 0.2)',
                   }}
                 >
-                  {isLoading ? (
+                  {isSubmitting ? (
                     <>
-                      <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
+                      <LoadingSpinner />
                       Entrando...
                     </>
                   ) : (
@@ -307,13 +336,13 @@ export const LoginForm = () => {
               <p className="text-gray-600 mb-4">
                 Não tem uma conta?{' '}
                 <button
-  type="button"
-  onClick={() => router.push('/')} // Volta para a página inicial (cadastro)
-  className="font-semibold ml-1 hover:underline transition-colors"
-  style={{ color: '#4B6043' }}
->
-  Cadastre-se
-</button>
+                  type="button"
+                  onClick={() => router.push('/')}
+                  className="font-semibold ml-1 hover:underline transition-colors"
+                  style={{ color: '#4B6043' }}
+                >
+                  Cadastre-se
+                </button>
               </p>
             </div>
           </div>
@@ -322,6 +351,7 @@ export const LoginForm = () => {
     );
   }
 
+  if (!currentUser) return null;
   return <Dashboard user={currentUser} />;
 };
 
