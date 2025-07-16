@@ -18,10 +18,29 @@ export const FormularioMaeSolo: React.FC<FormularioMaeSoloProps> = ({ onSuccess 
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-    reset
+    reset,
+    setValue
   } = useForm<MaeSoloData>({
     resolver: zodResolver(schemaMaeSolo)
   });
+
+  // 🔄 Função para formatar CPF enquanto digita
+  const formatCPF = (value: string) => {
+    const numbers = value.replace(/\D/g, '');
+    if (numbers.length <= 11) {
+      return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+    }
+    return value;
+  };
+
+  // 🔄 Função para formatar telefone enquanto digita
+  const formatTelefone = (value: string) => {
+    const numbers = value.replace(/\D/g, '');
+    if (numbers.length <= 11) {
+      return numbers.replace(/(\d{2})(\d{4,5})(\d{4})/, '($1) $2-$3');
+    }
+    return value;
+  };
 
   const onSubmit = async (data: MaeSoloData) => {
     try {
@@ -53,7 +72,7 @@ export const FormularioMaeSolo: React.FC<FormularioMaeSoloProps> = ({ onSuccess 
         {/* CAMPO: Nome Completo */}
         <div className="space-y-1">
           <label className="block text-xs font-medium" style={{color: '#4B6043'}}>
-            Nome completo
+            Nome completo *
           </label>
           <CampoComErro error={errors.nome?.message}>
             <input
@@ -77,6 +96,47 @@ export const FormularioMaeSolo: React.FC<FormularioMaeSoloProps> = ({ onSuccess 
               }}
               onBlur={(e) => {
                 if (!errors.nome) {
+                  e.target.style.borderColor = '#e5e7eb';
+                  e.target.style.backgroundColor = '#ffffff';
+                }
+              }}
+            />
+          </CampoComErro>
+        </div>
+
+        {/* CAMPO: CPF - ADICIONADO */}
+        <div className="space-y-1">
+          <label className="block text-xs font-medium" style={{color: '#4B6043'}}>
+            CPF *
+          </label>
+          <CampoComErro error={errors.cpf?.message}>
+            <input
+              type="text"
+              placeholder="000.000.000-00"
+              maxLength={14}
+              {...register('cpf')}
+              onChange={(e) => {
+                const formatted = formatCPF(e.target.value);
+                e.target.value = formatted;
+                setValue('cpf', formatted);
+              }}
+              className={`w-full p-3 border-2 rounded-xl text-sm outline-none transition-all duration-200 ${
+                errors.cpf 
+                  ? 'border-red-400 focus:border-red-500 bg-red-50' 
+                  : 'border-gray-200 focus:border-green-400 bg-white hover:border-gray-300'
+              }`}
+              style={{
+                borderColor: errors.cpf ? '#ef4444' : '#e5e7eb',
+                backgroundColor: errors.cpf ? '#fef2f2' : '#ffffff'
+              }}
+              onFocus={(e) => {
+                if (!errors.cpf) {
+                  e.target.style.borderColor = '#4B6043';
+                  e.target.style.backgroundColor = '#F9F4ED';
+                }
+              }}
+              onBlur={(e) => {
+                if (!errors.cpf) {
                   e.target.style.borderColor = '#e5e7eb';
                   e.target.style.backgroundColor = '#ffffff';
                 }
@@ -123,7 +183,7 @@ export const FormularioMaeSolo: React.FC<FormularioMaeSoloProps> = ({ onSuccess 
         {/* CAMPO: Senha */}
         <div className="space-y-1">
           <label className="block text-xs font-medium" style={{color: '#4B6043'}}>
-            Senha
+            Senha *
           </label>
           <CampoComErro error={errors.senha?.message}>
             <input
@@ -155,18 +215,24 @@ export const FormularioMaeSolo: React.FC<FormularioMaeSoloProps> = ({ onSuccess 
           </CampoComErro>
         </div>
 
-        {/* GRID: Telefone e Renda */}
+        {/* GRID: Telefone e Data de Nascimento */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* CAMPO: Telefone */}
           <div className="space-y-1">
             <label className="block text-xs font-medium" style={{color: '#4B6043'}}>
-              Telefone
+              Telefone *
             </label>
             <CampoComErro error={errors.telefone?.message}>
               <input
                 type="tel"
                 placeholder="(11) 99999-9999"
+                maxLength={15}
                 {...register('telefone')}
+                onChange={(e) => {
+                  const formatted = formatTelefone(e.target.value);
+                  e.target.value = formatted;
+                  setValue('telefone', formatted);
+                }}
                 className={`w-full p-3 border-2 rounded-xl text-sm outline-none transition-all duration-200 ${
                   errors.telefone 
                     ? 'border-red-400 focus:border-red-500 bg-red-50' 
@@ -192,35 +258,32 @@ export const FormularioMaeSolo: React.FC<FormularioMaeSoloProps> = ({ onSuccess 
             </CampoComErro>
           </div>
 
-          {/* CAMPO: Renda Mensal */}
+          {/* CAMPO: Data de Nascimento - ADICIONADO */}
           <div className="space-y-1">
             <label className="block text-xs font-medium" style={{color: '#4B6043'}}>
-              Renda Mensal
+              Data de Nascimento *
             </label>
-            <CampoComErro error={errors.rendaMensal?.message}>
+            <CampoComErro error={errors.dataNascimento?.message}>
               <input
-                type="number"
-                placeholder="R$ 0,00"
-                step="0.01"
-                min="0"
-                {...register('rendaMensal')}
+                type="date"
+                {...register('dataNascimento')}
                 className={`w-full p-3 border-2 rounded-xl text-sm outline-none transition-all duration-200 ${
-                  errors.rendaMensal 
+                  errors.dataNascimento 
                     ? 'border-red-400 focus:border-red-500 bg-red-50' 
                     : 'border-gray-200 focus:border-green-400 bg-white hover:border-gray-300'
                 }`}
                 style={{
-                  borderColor: errors.rendaMensal ? '#ef4444' : '#e5e7eb',
-                  backgroundColor: errors.rendaMensal ? '#fef2f2' : '#ffffff'
+                  borderColor: errors.dataNascimento ? '#ef4444' : '#e5e7eb',
+                  backgroundColor: errors.dataNascimento ? '#fef2f2' : '#ffffff'
                 }}
                 onFocus={(e) => {
-                  if (!errors.rendaMensal) {
+                  if (!errors.dataNascimento) {
                     e.target.style.borderColor = '#4B6043';
                     e.target.style.backgroundColor = '#F9F4ED';
                   }
                 }}
                 onBlur={(e) => {
-                  if (!errors.rendaMensal) {
+                  if (!errors.dataNascimento) {
                     e.target.style.borderColor = '#e5e7eb';
                     e.target.style.backgroundColor = '#ffffff';
                   }
@@ -233,7 +296,7 @@ export const FormularioMaeSolo: React.FC<FormularioMaeSoloProps> = ({ onSuccess 
         {/* CAMPO: Endereço */}
         <div className="space-y-1">
           <label className="block text-xs font-medium" style={{color: '#4B6043'}}>
-            Endereço
+            Endereço *
           </label>
           <CampoComErro error={errors.endereco?.message}>
             <input
@@ -250,17 +313,54 @@ export const FormularioMaeSolo: React.FC<FormularioMaeSoloProps> = ({ onSuccess 
                 backgroundColor: errors.endereco ? '#fef2f2' : '#ffffff'
               }}
               onFocus={(e) => {
-                if (!errors.endereco) {
-                  e.target.style.borderColor = '#4B6043';
-                  e.target.style.backgroundColor = '#F9F4ED';
-                }
-              }}
+  if (!errors.endereco) {
+    (e.target as HTMLInputElement).style.borderColor = '#4B6043';
+    (e.target as HTMLInputElement).style.backgroundColor = '#F9F4ED';
+  }
+}}
               onBlur={(e) => {
-                if (!errors.endereco) {
-                  e.target.style.borderColor = '#e5e7eb';
-                  e.target.style.backgroundColor = '#ffffff';
-                }
+  if (!errors.endereco) {
+    (e.target as HTMLInputElement).style.borderColor = '#e5e7eb';
+    (e.target as HTMLInputElement).style.backgroundColor = '#ffffff';
+  }
+}}
+            />
+          </CampoComErro>
+        </div>
+
+        {/* GRID: Renda Mensal */}
+        <div className="space-y-1">
+          <label className="block text-xs font-medium" style={{color: '#4B6043'}}>
+            Renda Mensal *
+          </label>
+          <CampoComErro error={errors.rendaMensal?.message}>
+            <input
+              type="number"
+              placeholder="R$ 0,00"
+              step="0.01"
+              min="0"
+              {...register('rendaMensal')}
+              className={`w-full p-3 border-2 rounded-xl text-sm outline-none transition-all duration-200 ${
+                errors.rendaMensal 
+                  ? 'border-red-400 focus:border-red-500 bg-red-50' 
+                  : 'border-gray-200 focus:border-green-400 bg-white hover:border-gray-300'
+              }`}
+              style={{
+                borderColor: errors.rendaMensal ? '#ef4444' : '#e5e7eb',
+                backgroundColor: errors.rendaMensal ? '#fef2f2' : '#ffffff'
               }}
+             onFocus={(e) => {
+  if (!errors.rendaMensal) {
+    (e.target as HTMLInputElement).style.borderColor = '#4B6043';
+    (e.target as HTMLInputElement).style.backgroundColor = '#F9F4ED';
+  }
+}}
+onBlur={(e) => {
+  if (!errors.rendaMensal) {
+    (e.target as HTMLInputElement).style.borderColor = '#e5e7eb';
+    (e.target as HTMLInputElement).style.backgroundColor = '#ffffff';
+  }
+}}
             />
           </CampoComErro>
         </div>
@@ -270,7 +370,7 @@ export const FormularioMaeSolo: React.FC<FormularioMaeSoloProps> = ({ onSuccess 
           {/* CAMPO: Situação de Trabalho - SELECT */}
           <div className="space-y-1">
             <label className="block text-xs font-medium" style={{color: '#4B6043'}}>
-              Situação de Trabalho
+              Situação de Trabalho *
             </label>
             <CampoComErro error={errors.situacaoTrabalho?.message}>
               <select
@@ -313,7 +413,7 @@ export const FormularioMaeSolo: React.FC<FormularioMaeSoloProps> = ({ onSuccess 
           {/* CAMPO: Escolaridade - SELECT */}
           <div className="space-y-1">
             <label className="block text-xs font-medium" style={{color: '#4B6043'}}>
-              Escolaridade
+              Escolaridade *
             </label>
             <CampoComErro error={errors.escolaridade?.message}>
               <select
@@ -341,13 +441,10 @@ export const FormularioMaeSolo: React.FC<FormularioMaeSoloProps> = ({ onSuccess 
                 }}
               >
                 <option value="">Selecione sua escolaridade</option>
-                <option value="fundamental_incompleto">Fundamental Incompleto</option>
-                <option value="fundamental_completo">Fundamental Completo</option>
-                <option value="medio_incompleto">Médio Incompleto</option>
-                <option value="medio_completo">Médio Completo</option>
-                <option value="superior_incompleto">Superior Incompleto</option>
-                <option value="superior_completo">Superior Completo</option>
-                <option value="pos_graduacao">Pós-graduação</option>
+                <option value="medioIncompleto">Médio Incompleto</option>
+                <option value="medioCompleto">Médio Completo</option>
+                <option value="superiorIncompleto">Superior Incompleto</option>
+                <option value="superiorCompleto">Superior Completo</option>
               </select>
             </CampoComErro>
           </div>
@@ -369,14 +466,14 @@ export const FormularioMaeSolo: React.FC<FormularioMaeSoloProps> = ({ onSuccess 
             }}
             onMouseEnter={(e) => {
               if (!isSubmitting) {
-                e.target.style.backgroundColor = '#3d4e37';
-              }
-            }}
+(e.target as HTMLButtonElement).style.backgroundColor = '#3d4e37'; 
+  }
+}}
             onMouseLeave={(e) => {
-              if (!isSubmitting) {
-                e.target.style.backgroundColor = '#4B6043';
-              }
-            }}
+  if (!isSubmitting) {
+    (e.target as HTMLButtonElement).style.backgroundColor = '#4B6043';
+  }
+}}
           >
             {isSubmitting ? (
               <>

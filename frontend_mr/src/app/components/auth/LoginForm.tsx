@@ -10,29 +10,6 @@ import { login } from '../../services/api';
 import { CampoComErro } from '../ui/CampoComErro';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 
-// 🧪 Usuários fake para teste (usando CPF)
-const mockUsers = [
-  {
-    id: '1',
-    cpf: '12345678901',
-    senha: '123456',
-    tipo: 'mae_solo' as const,
-    nome: 'Maria Silva',
-    email: 'maria@exemplo.com',
-    situacaoTrabalho: 'autonoma',
-  },
-  {
-    id: '2',
-    cpf: '98765432100',
-    senha: '123456',
-    tipo: 'profissional' as const,
-    nome: 'Dr. João Santos',
-    email: 'dr.joao@clinica.com',
-    profissao: 'pediatra',
-    registro: 'CRM-SP 123456',
-  },
-];
-
 export const LoginForm = () => {
   const router = useRouter();
   const [loginStep, setLoginStep] = useState<'login' | 'dashboard'>('login');
@@ -43,7 +20,8 @@ export const LoginForm = () => {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-    reset
+    reset,
+    setValue
   } = useForm<LoginData>({
     resolver: zodResolver(schemaLogin)
   });
@@ -61,20 +39,27 @@ export const LoginForm = () => {
     try {
       setLoginError('');
       
-      // 🧪 Simular login fake primeiro (remover depois)
-      const cpfLimpo = data.cpf.replace(/[^\d]/g, '');
-      const user = mockUsers.find(u => u.cpf === cpfLimpo && u.senha === data.senha);
+      // 🔄 Login real com a API
+      const user = await login(data.cpf, data.senha);
       
-      if (user) {
-        setCurrentUser(user);
-        setLoginStep('dashboard');
-      } else {
-        // 🔄 Tentar login real com a API (descomente quando API estiver funcionando)
-        // const user = await login(data.cpf, data.senha);
-        // setCurrentUser(user);
-        // setLoginStep('dashboard');
-        setLoginError('CPF ou senha incorretos');
-      }
+      // Criar objeto user padronizado
+      const userData: User = {
+        id: user.id,
+        cpf: data.cpf,
+        nome: user.nome || 'Usuário',
+        email: user.email,
+        telefone: user.telefone,
+        tipo: user.MaeSolo ? 'mae_solo' : 'profissional',
+        endereco: user.MaeSolo?.endereco,
+        situacaoTrabalho: user.MaeSolo?.situacaoTrabalho ? 'Empregada' : 'Desempregada',
+        areaAtuacao: user.ProfissionalApoio?.areaAtuacao,
+        dataNascimento: user.MaeSolo?.data_nascimento,
+        rendaMensal: user.MaeSolo?.rendaMensal,
+        escolaridade: user.MaeSolo?.escolaridade
+      };
+      
+      setCurrentUser(userData);
+      setLoginStep('dashboard');
     } catch (error: any) {
       setLoginError(error.message || 'Erro ao fazer login');
     }
@@ -130,7 +115,7 @@ export const LoginForm = () => {
                   CPF
                 </label>
                 <p className="text-gray-900 p-3 rounded-lg" style={{ backgroundColor: '#F9F4ED' }}>
-                  {user.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')}
+                  {user.cpf}
                 </p>
               </div>
               {user.email && (
@@ -143,6 +128,16 @@ export const LoginForm = () => {
                   </p>
                 </div>
               )}
+              {user.telefone && (
+                <div>
+                  <label className="block text-sm font-medium mb-1" style={{ color: themeColor }}>
+                    Telefone
+                  </label>
+                  <p className="text-gray-900 p-3 rounded-lg" style={{ backgroundColor: '#F9F4ED' }}>
+                    {user.telefone}
+                  </p>
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium mb-1" style={{ color: themeColor }}>
                   Tipo de Conta
@@ -152,49 +147,62 @@ export const LoginForm = () => {
                 </p>
               </div>
               {isMaeSolo ? (
-                user.situacaoTrabalho && (
-                  <div>
-                    <label className="block text-sm font-medium mb-1" style={{ color: themeColor }}>
-                      Situação de Trabalho
-                    </label>
-                    <p className="text-gray-900 p-3 rounded-lg" style={{ backgroundColor: '#F9F4ED' }}>
-                      {user.situacaoTrabalho}
-                    </p>
-                  </div>
-                )
-              ) : (
                 <>
-                  {user.profissao && (
+                  {user.endereco && (
                     <div>
                       <label className="block text-sm font-medium mb-1" style={{ color: themeColor }}>
-                        Profissão
+                        Endereço
                       </label>
                       <p className="text-gray-900 p-3 rounded-lg" style={{ backgroundColor: '#F9F4ED' }}>
-                        {user.profissao}
+                        {user.endereco}
                       </p>
                     </div>
                   )}
-                  {user.registro && (
+                  {user.situacaoTrabalho && (
                     <div>
                       <label className="block text-sm font-medium mb-1" style={{ color: themeColor }}>
-                        Registro Profissional
+                        Situação de Trabalho
                       </label>
                       <p className="text-gray-900 p-3 rounded-lg" style={{ backgroundColor: '#F9F4ED' }}>
-                        {user.registro}
+                        {user.situacaoTrabalho}
+                      </p>
+                    </div>
+                  )}
+                  {user.rendaMensal && (
+                    <div>
+                      <label className="block text-sm font-medium mb-1" style={{ color: themeColor }}>
+                        Renda Mensal
+                      </label>
+                      <p className="text-gray-900 p-3 rounded-lg" style={{ backgroundColor: '#F9F4ED' }}>
+                        R$ {user.rendaMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                  )}
+                  {user.escolaridade && (
+                    <div>
+                      <label className="block text-sm font-medium mb-1" style={{ color: themeColor }}>
+                        Escolaridade
+                      </label>
+                      <p className="text-gray-900 p-3 rounded-lg" style={{ backgroundColor: '#F9F4ED' }}>
+                        {user.escolaridade}
+                      </p>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  {user.areaAtuacao && (
+                    <div>
+                      <label className="block text-sm font-medium mb-1" style={{ color: themeColor }}>
+                        Área de Atuação
+                      </label>
+                      <p className="text-gray-900 p-3 rounded-lg" style={{ backgroundColor: '#F9F4ED' }}>
+                        {user.areaAtuacao}
                       </p>
                     </div>
                   )}
                 </>
               )}
-            </div>
-
-            {/* 💡 Dica para teste */}
-            <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <h4 className="font-bold text-blue-800 mb-2">💡 Para testar:</h4>
-              <ul className="text-sm text-blue-700 space-y-1">
-                <li>• <strong>Mãe Solo:</strong> CPF: 123.456.789-01 | Senha: 123456</li>
-                <li>• <strong>Profissional:</strong> CPF: 987.654.321-00 | Senha: 123456</li>
-              </ul>
             </div>
           </div>
         </div>
@@ -232,6 +240,7 @@ export const LoginForm = () => {
                     onChange={(e) => {
                       const formatted = formatCPF(e.target.value);
                       e.target.value = formatted;
+                      setValue('cpf', formatted);
                     }}
                     className={`w-full p-4 border-2 rounded-xl text-base outline-none transition-all duration-200 ${
                       errors.cpf ? 'border-red-400 bg-red-50' : 'border-gray-200 bg-white'

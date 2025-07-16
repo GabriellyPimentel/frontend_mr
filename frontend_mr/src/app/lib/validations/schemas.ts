@@ -1,4 +1,3 @@
-
 import { z } from 'zod';
 
 // 📝 Função para validar CPF
@@ -38,25 +37,25 @@ export const schemaMaeSolo = z.object({
     .refine(validarCPF, 'CPF inválido'),
   email: z.string()
     .email('Email inválido')
-    .optional(),
+    .optional()
+    .or(z.literal('')),
   senha: z.string()
     .min(6, 'Senha deve ter pelo menos 6 caracteres')
     .max(50, 'Senha muito longa'),
   telefone: z.string()
     .min(10, 'Telefone deve ter pelo menos 10 dígitos')
-    .regex(/^\(\d{2}\)\s\d{4,5}-\d{4}$|^\d{10,11}$/, 'Formato de telefone inválido'),
+    .max(15, 'Telefone muito longo'),
+  dataNascimento: z.string()
+    .min(1, 'Data de nascimento é obrigatória'),
   endereco: z.string()
     .min(5, 'Endereço é obrigatório')
     .max(200, 'Endereço muito longo'),
   rendaMensal: z.coerce.number()
-    .min(0, 'Renda não pode ser negativa')
-    .optional(),
+    .min(0, 'Renda não pode ser negativa'),
   situacaoTrabalho: z.string()
-    .min(1, 'Selecione uma situação de trabalho')
-    .optional(),
+    .min(1, 'Selecione uma situação de trabalho'),
   escolaridade: z.string()
-    .min(1, 'Selecione uma escolaridade')
-    .optional(),
+    .min(1, 'Selecione uma escolaridade'),
 });
 
 // 🩺 Schema de validação para profissional
@@ -70,18 +69,16 @@ export const schemaProfissional = z.object({
     .refine(validarCPF, 'CPF inválido'),
   email: z.string()
     .email('Email inválido')
-    .optional(),
+    .optional()
+    .or(z.literal('')),
   senha: z.string()
     .min(6, 'Senha deve ter pelo menos 6 caracteres')
     .max(50, 'Senha muito longa'),
   telefone: z.string()
     .min(10, 'Telefone deve ter pelo menos 10 dígitos')
-    .regex(/^\(\d{2}\)\s\d{4,5}-\d{4}$|^\d{10,11}$/, 'Formato de telefone inválido'),
-  profissao: z.string()
-    .min(1, 'Selecione uma profissão'),
-  registro: z.string()
-    .min(3, 'Número de registro é obrigatório')
-    .max(20, 'Registro muito longo'),
+    .max(15, 'Telefone muito longo'),
+  areaAtuacao: z.string()
+    .min(1, 'Selecione uma área de atuação'),
 });
 
 // 🔐 Schema de validação para login com CPF

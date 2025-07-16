@@ -18,10 +18,29 @@ export const FormularioProfissional: React.FC<FormularioProfissionalProps> = ({ 
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-    reset
+    reset,
+    setValue
   } = useForm<ProfissionalData>({
     resolver: zodResolver(schemaProfissional)
   });
+
+  // 🔄 Função para formatar CPF enquanto digita
+  const formatCPF = (value: string) => {
+    const numbers = value.replace(/\D/g, '');
+    if (numbers.length <= 11) {
+      return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+    }
+    return value;
+  };
+
+  // 🔄 Função para formatar telefone enquanto digita
+  const formatTelefone = (value: string) => {
+    const numbers = value.replace(/\D/g, '');
+    if (numbers.length <= 11) {
+      return numbers.replace(/(\d{2})(\d{4,5})(\d{4})/, '($1) $2-$3');
+    }
+    return value;
+  };
 
   const onSubmit = async (data: ProfissionalData) => {
     try {
@@ -53,7 +72,7 @@ export const FormularioProfissional: React.FC<FormularioProfissionalProps> = ({ 
         {/* CAMPO: Nome Completo */}
         <div className="space-y-1">
           <label className="block text-xs font-medium" style={{color: '#B17853'}}>
-            Nome completo
+            Nome completo *
           </label>
           <CampoComErro error={errors.nome?.message}>
             <input
@@ -71,14 +90,55 @@ export const FormularioProfissional: React.FC<FormularioProfissionalProps> = ({ 
               }}
               onFocus={(e) => {
                 if (!errors.nome) {
-                  e.target.style.borderColor = '#B17853';
-                  e.target.style.backgroundColor = '#F9F4ED';
+                  (e.target as HTMLInputElement).style.borderColor = '#B17853';
+                  (e.target as HTMLInputElement).style.backgroundColor = '#F9F4ED';
                 }
               }}
               onBlur={(e) => {
                 if (!errors.nome) {
-                  e.target.style.borderColor = '#e5e7eb';
-                  e.target.style.backgroundColor = '#ffffff';
+                  (e.target as HTMLInputElement).style.borderColor = '#e5e7eb';
+                  (e.target as HTMLInputElement).style.backgroundColor = '#ffffff';
+                }
+              }}
+            />
+          </CampoComErro>
+        </div>
+
+        {/* CAMPO: CPF - ADICIONADO */}
+        <div className="space-y-1">
+          <label className="block text-xs font-medium" style={{color: '#B17853'}}>
+            CPF *
+          </label>
+          <CampoComErro error={errors.cpf?.message}>
+            <input
+              type="text"
+              placeholder="000.000.000-00"
+              maxLength={14}
+              {...register('cpf')}
+              onChange={(e) => {
+                const formatted = formatCPF(e.target.value);
+                e.target.value = formatted;
+                setValue('cpf', formatted);
+              }}
+              className={`w-full p-3 border-2 rounded-xl text-sm outline-none transition-all duration-200 ${
+                errors.cpf 
+                  ? 'border-red-400 focus:border-red-500 bg-red-50' 
+                  : 'border-gray-200 focus:border-amber-400 bg-white hover:border-gray-300'
+              }`}
+              style={{
+                borderColor: errors.cpf ? '#ef4444' : '#e5e7eb',
+                backgroundColor: errors.cpf ? '#fef2f2' : '#ffffff'
+              }}
+              onFocus={(e) => {
+                if (!errors.cpf) {
+                  (e.target as HTMLInputElement).style.borderColor = '#B17853';
+                  (e.target as HTMLInputElement).style.backgroundColor = '#F9F4ED';
+                }
+              }}
+              onBlur={(e) => {
+                if (!errors.cpf) {
+                  (e.target as HTMLInputElement).style.borderColor = '#e5e7eb';
+                  (e.target as HTMLInputElement).style.backgroundColor = '#ffffff';
                 }
               }}
             />
@@ -106,14 +166,14 @@ export const FormularioProfissional: React.FC<FormularioProfissionalProps> = ({ 
               }}
               onFocus={(e) => {
                 if (!errors.email) {
-                  e.target.style.borderColor = '#B17853';
-                  e.target.style.backgroundColor = '#F9F4ED';
+                  (e.target as HTMLInputElement).style.borderColor = '#B17853';
+                  (e.target as HTMLInputElement).style.backgroundColor = '#F9F4ED';
                 }
               }}
               onBlur={(e) => {
                 if (!errors.email) {
-                  e.target.style.borderColor = '#e5e7eb';
-                  e.target.style.backgroundColor = '#ffffff';
+                  (e.target as HTMLInputElement).style.borderColor = '#e5e7eb';
+                  (e.target as HTMLInputElement).style.backgroundColor = '#ffffff';
                 }
               }}
             />
@@ -123,7 +183,7 @@ export const FormularioProfissional: React.FC<FormularioProfissionalProps> = ({ 
         {/* CAMPO: Senha */}
         <div className="space-y-1">
           <label className="block text-xs font-medium" style={{color: '#B17853'}}>
-            Senha
+            Senha *
           </label>
           <CampoComErro error={errors.senha?.message}>
             <input
@@ -141,14 +201,14 @@ export const FormularioProfissional: React.FC<FormularioProfissionalProps> = ({ 
               }}
               onFocus={(e) => {
                 if (!errors.senha) {
-                  e.target.style.borderColor = '#B17853';
-                  e.target.style.backgroundColor = '#F9F4ED';
+                  (e.target as HTMLInputElement).style.borderColor = '#B17853';
+                  (e.target as HTMLInputElement).style.backgroundColor = '#F9F4ED';
                 }
               }}
               onBlur={(e) => {
                 if (!errors.senha) {
-                  e.target.style.borderColor = '#e5e7eb';
-                  e.target.style.backgroundColor = '#ffffff';
+                  (e.target as HTMLInputElement).style.borderColor = '#e5e7eb';
+                  (e.target as HTMLInputElement).style.backgroundColor = '#ffffff';
                 }
               }}
             />
@@ -160,13 +220,19 @@ export const FormularioProfissional: React.FC<FormularioProfissionalProps> = ({ 
           {/* CAMPO: Telefone */}
           <div className="space-y-1">
             <label className="block text-xs font-medium" style={{color: '#B17853'}}>
-              Telefone
+              Telefone *
             </label>
             <CampoComErro error={errors.telefone?.message}>
               <input
                 type="tel"
                 placeholder="(11) 99999-9999"
+                maxLength={15}
                 {...register('telefone')}
+                onChange={(e) => {
+                  const formatted = formatTelefone(e.target.value);
+                  e.target.value = formatted;
+                  setValue('telefone', formatted);
+                }}
                 className={`w-full p-3 border-2 rounded-xl text-sm outline-none transition-all duration-200 ${
                   errors.telefone 
                     ? 'border-red-400 focus:border-red-500 bg-red-50' 
@@ -178,14 +244,14 @@ export const FormularioProfissional: React.FC<FormularioProfissionalProps> = ({ 
                 }}
                 onFocus={(e) => {
                   if (!errors.telefone) {
-                    e.target.style.borderColor = '#B17853';
-                    e.target.style.backgroundColor = '#F9F4ED';
+                    (e.target as HTMLInputElement).style.borderColor = '#B17853';
+                    (e.target as HTMLInputElement).style.backgroundColor = '#F9F4ED';
                   }
                 }}
                 onBlur={(e) => {
                   if (!errors.telefone) {
-                    e.target.style.borderColor = '#e5e7eb';
-                    e.target.style.backgroundColor = '#ffffff';
+                    (e.target as HTMLInputElement).style.borderColor = '#e5e7eb';
+                    (e.target as HTMLInputElement).style.backgroundColor = '#ffffff';
                   }
                 }}
               />
@@ -195,78 +261,44 @@ export const FormularioProfissional: React.FC<FormularioProfissionalProps> = ({ 
           {/* CAMPO: Profissão - SELECT */}
           <div className="space-y-1">
             <label className="block text-xs font-medium" style={{color: '#B17853'}}>
-              Profissão
+              Área de Atuação *
             </label>
-            <CampoComErro error={errors.profissao?.message}>
+            <CampoComErro error={errors.areaAtuacao?.message}>
               <select
-                {...register('profissao')}
+                {...register('areaAtuacao')}
                 className={`w-full p-3 border-2 rounded-xl text-sm outline-none transition-all duration-200 ${
-                  errors.profissao 
+                  errors.areaAtuacao 
                     ? 'border-red-400 focus:border-red-500 bg-red-50' 
                     : 'border-gray-200 focus:border-amber-400 bg-white hover:border-gray-300'
                 }`}
                 style={{
-                  borderColor: errors.profissao ? '#ef4444' : '#e5e7eb',
-                  backgroundColor: errors.profissao ? '#fef2f2' : '#ffffff'
+                  borderColor: errors.areaAtuacao ? '#ef4444' : '#e5e7eb',
+                  backgroundColor: errors.areaAtuacao ? '#fef2f2' : '#ffffff'
                 }}
                 onFocus={(e) => {
-                  if (!errors.profissao) {
-                    e.target.style.borderColor = '#B17853';
-                    e.target.style.backgroundColor = '#F9F4ED';
+                  if (!errors.areaAtuacao) {
+                    (e.target as HTMLSelectElement).style.borderColor = '#B17853';
+                    (e.target as HTMLSelectElement).style.backgroundColor = '#F9F4ED';
                   }
                 }}
                 onBlur={(e) => {
-                  if (!errors.profissao) {
-                    e.target.style.borderColor = '#e5e7eb';
-                    e.target.style.backgroundColor = '#ffffff';
+                  if (!errors.areaAtuacao) {
+                    (e.target as HTMLSelectElement).style.borderColor = '#e5e7eb';
+                    (e.target as HTMLSelectElement).style.backgroundColor = '#ffffff';
                   }
                 }}
               >
-                <option value="">Selecione sua profissão</option>
-                <option value="psicologia">Psicólogo(a)</option>
-                <option value="assistente_social">Assistente Social</option>
-                <option value="pediatra">Pediatra</option>
-                <option value="advogado">Advogado(a)</option>
-                <option value="nutricionista">Nutricionista</option>
-                <option value="outro">Outro</option>
+                <option value="">Selecione sua área</option>
+                <option value="Psicologia">Psicologia</option>
+                <option value="Assistência Social">Assistência Social</option>
+                <option value="Medicina">Medicina</option>
+                <option value="Direito">Direito</option>
+                <option value="Nutrição">Nutrição</option>
+                <option value="Pedagogia">Pedagogia</option>
+                <option value="Outros">Outros</option>
               </select>
             </CampoComErro>
           </div>
-        </div>
-        
-        {/* CAMPO: Registro Profissional */}
-        <div className="space-y-1">
-          <label className="block text-xs font-medium" style={{color: '#B17853'}}>
-            Registro Profissional
-          </label>
-          <CampoComErro error={errors.registro?.message}>
-            <input
-              type="text"
-              placeholder="CRP, CRESS, CRM, OAB, etc."
-              {...register('registro')}
-              className={`w-full p-3 border-2 rounded-xl text-sm outline-none transition-all duration-200 ${
-                errors.registro 
-                  ? 'border-red-400 focus:border-red-500 bg-red-50' 
-                  : 'border-gray-200 focus:border-amber-400 bg-white hover:border-gray-300'
-              }`}
-              style={{
-                borderColor: errors.registro ? '#ef4444' : '#e5e7eb',
-                backgroundColor: errors.registro ? '#fef2f2' : '#ffffff'
-              }}
-              onFocus={(e) => {
-                if (!errors.registro) {
-                  e.target.style.borderColor = '#B17853';
-                  e.target.style.backgroundColor = '#F9F4ED';
-                }
-              }}
-              onBlur={(e) => {
-                if (!errors.registro) {
-                  e.target.style.borderColor = '#e5e7eb';
-                  e.target.style.backgroundColor = '#ffffff';
-                }
-              }}
-            />
-          </CampoComErro>
         </div>
         
         {/* BOTÃO DE ENVIO */}
@@ -285,12 +317,12 @@ export const FormularioProfissional: React.FC<FormularioProfissionalProps> = ({ 
             }}
             onMouseEnter={(e) => {
               if (!isSubmitting) {
-                e.target.style.backgroundColor = '#9d6545';
+                (e.target as HTMLButtonElement).style.backgroundColor = '#9d6545';
               }
             }}
             onMouseLeave={(e) => {
               if (!isSubmitting) {
-                e.target.style.backgroundColor = '#B17853';
+                (e.target as HTMLButtonElement).style.backgroundColor = '#B17853';
               }
             }}
           >

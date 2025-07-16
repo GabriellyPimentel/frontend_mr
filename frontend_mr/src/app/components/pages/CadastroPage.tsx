@@ -60,12 +60,12 @@ export const CadastroPage: React.FC = () => {
               onClick={() => setTipoFormulario('mae')}
               onMouseEnter={(e) => {
                 if (tipoFormulario !== 'mae') {
-                  e.target.style.backgroundColor = '#f9fafb';
+                  (e.target as HTMLButtonElement).style.backgroundColor = '#f9fafb';
                 }
               }}
               onMouseLeave={(e) => {
                 if (tipoFormulario !== 'mae') {
-                  e.target.style.backgroundColor = 'transparent';
+                  (e.target as HTMLButtonElement).style.backgroundColor = 'transparent';
                 }
               }}
             >
@@ -89,12 +89,12 @@ export const CadastroPage: React.FC = () => {
               onClick={() => setTipoFormulario('profissional')}
               onMouseEnter={(e) => {
                 if (tipoFormulario !== 'profissional') {
-                  e.target.style.backgroundColor = '#f9fafb';
+                  (e.target as HTMLButtonElement).style.backgroundColor = '#f9fafb';
                 }
               }}
               onMouseLeave={(e) => {
                 if (tipoFormulario !== 'profissional') {
-                  e.target.style.backgroundColor = 'transparent';
+                  (e.target as HTMLButtonElement).style.backgroundColor = 'transparent';
                 }
               }}
             >
