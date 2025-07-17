@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { motion, AnimatePresence } from 'framer-motion';
 import { schemaLogin } from '../../lib/validations/schemas';
 import { LoginData, User } from '../../types';
 import { login } from '../../services/api';
@@ -72,167 +73,331 @@ export const LoginForm = () => {
     setLoginError('');
   };
 
+  // Variantes de animação
+  const pageVariants = {
+    initial: { opacity: 0, scale: 0.95 },
+    in: { opacity: 1, scale: 1 },
+    out: { opacity: 0, scale: 1.05 }
+  } as const;
+
+  const pageTransition = {
+    type: "tween" as const,
+    ease: "anticipate" as const,
+    duration: 0.6
+  };
+
+  const containerVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.6,
+        staggerChildren: 0.1,
+        delayChildren: 0.2
+      }
+    }
+  } as const;
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5 }
+    }
+  } as const;
+
+  const buttonVariants = {
+    idle: { scale: 1 },
+    hover: { 
+      scale: 1.05,
+      boxShadow: "0 10px 25px rgba(75, 96, 67, 0.3)",
+      transition: { duration: 0.2 }
+    },
+    tap: { scale: 0.95 }
+  } as const;
+
+    const errorVariants = {
+      hidden: { opacity: 0, y: -10, scale: 0.95 },
+      visible: { 
+        opacity: 1, 
+        y: 0, 
+        scale: 1,
+        transition: { 
+          type: "spring" as const, 
+          stiffness: 500, 
+          damping: 30 
+        }
+      }
+    };
+
   // Dashboard pós login
   const Dashboard = ({ user }: { user: User }) => {
     const isMaeSolo = user.tipo === 'mae_solo';
     const themeColor = isMaeSolo ? '#4B6043' : '#B17853';
     const icon = isMaeSolo ? '👩‍👧‍👦' : '🩺';
 
+    const dashboardVariants = {
+      initial: { opacity: 0, y: 50 },
+      animate: { 
+        opacity: 1, 
+        y: 0,
+        transition: { 
+          duration: 0.6,
+          staggerChildren: 0.1,
+          delayChildren: 0.2
+        }
+      }
+    } as const;
+
+    const cardVariants = {
+      initial: { opacity: 0, y: 30, scale: 0.95 },
+      animate: { 
+        opacity: 1, 
+        y: 0, 
+        scale: 1,
+        transition: { duration: 0.5 }
+      }
+    } as const;
+
     return (
-      <div className="min-h-screen" style={{ backgroundColor: '#F9F4ED' }}>
+      <motion.div 
+        className="min-h-screen" 
+        style={{ backgroundColor: '#F9F4ED' }}
+        variants={dashboardVariants}
+        initial="initial"
+        animate="animate"
+      >
         <div className="max-w-2xl mx-auto p-6">
-          <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+          <motion.div 
+            className="bg-white rounded-xl shadow-sm p-6 mb-6"
+            variants={cardVariants}
+            whileHover={{ y: -5, boxShadow: "0 20px 40px rgba(0,0,0,0.1)" }}
+          >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full flex items-center justify-center text-2xl" style={{ backgroundColor: '#A3B18A20' }}>
+                <motion.div 
+                  className="w-12 h-12 rounded-full flex items-center justify-center text-2xl" 
+                  style={{ backgroundColor: '#A3B18A20' }}
+                  whileHover={{ rotate: 360, scale: 1.1 }}
+                  transition={{ duration: 0.6 }}
+                >
                   {icon}
-                </div>
+                </motion.div>
                 <div>
-                  <h1 className="text-xl font-bold" style={{ color: themeColor }}>
+                  <motion.h1 
+                    className="text-xl font-bold" 
+                    style={{ color: themeColor }}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.3 }}
+                  >
                     Bem-vindo(a), {user.nome.split(' ')[0]}!
-                  </h1>
-                  <p className="text-gray-600">
+                  </motion.h1>
+                  <motion.p 
+                    className="text-gray-600"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.4 }}
+                  >
                     {isMaeSolo ? 'Mãe Solo' : 'Profissional'}
-                  </p>
+                  </motion.p>
                 </div>
               </div>
-              <button
+              <motion.button
                 onClick={handleLogout}
                 className="text-gray-500 hover:text-gray-700 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
                 Sair
-              </button>
+              </motion.button>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <h2 className="text-lg font-semibold mb-4" style={{ color: themeColor }}>
+          <motion.div 
+            className="bg-white rounded-xl shadow-sm p-6"
+            variants={cardVariants}
+            whileHover={{ y: -5, boxShadow: "0 20px 40px rgba(0,0,0,0.1)" }}
+          >
+            <motion.h2 
+              className="text-lg font-semibold mb-4" 
+              style={{ color: themeColor }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+            >
               Informações da Conta
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
+            </motion.h2>
+            <motion.div 
+              className="grid grid-cols-1 md:grid-cols-2 gap-4"
+              variants={containerVariants}
+            >
+              {/* Informações básicas */}
+              <motion.div variants={itemVariants}>
                 <label className="block text-sm font-medium mb-1" style={{ color: themeColor }}>
                   CPF
                 </label>
                 <p className="text-gray-900 p-3 rounded-lg" style={{ backgroundColor: '#F9F4ED' }}>
                   {user.cpf}
                 </p>
-              </div>
+              </motion.div>
+              
               {user.email && (
-                <div>
+                <motion.div variants={itemVariants}>
                   <label className="block text-sm font-medium mb-1" style={{ color: themeColor }}>
                     Email
                   </label>
                   <p className="text-gray-900 p-3 rounded-lg" style={{ backgroundColor: '#F9F4ED' }}>
                     {user.email}
                   </p>
-                </div>
+                </motion.div>
               )}
+              
               {user.telefone && (
-                <div>
+                <motion.div variants={itemVariants}>
                   <label className="block text-sm font-medium mb-1" style={{ color: themeColor }}>
                     Telefone
                   </label>
                   <p className="text-gray-900 p-3 rounded-lg" style={{ backgroundColor: '#F9F4ED' }}>
                     {user.telefone}
                   </p>
-                </div>
+                </motion.div>
               )}
-              <div>
+              
+              <motion.div variants={itemVariants}>
                 <label className="block text-sm font-medium mb-1" style={{ color: themeColor }}>
                   Tipo de Conta
                 </label>
                 <p className="text-gray-900 p-3 rounded-lg" style={{ backgroundColor: '#F9F4ED' }}>
                   {isMaeSolo ? 'Mãe Solo' : 'Profissional'}
                 </p>
-              </div>
+              </motion.div>
+
+              {/* Informações específicas */}
               {isMaeSolo ? (
                 <>
                   {user.endereco && (
-                    <div>
+                    <motion.div variants={itemVariants}>
                       <label className="block text-sm font-medium mb-1" style={{ color: themeColor }}>
                         Endereço
                       </label>
                       <p className="text-gray-900 p-3 rounded-lg" style={{ backgroundColor: '#F9F4ED' }}>
                         {user.endereco}
                       </p>
-                    </div>
+                    </motion.div>
                   )}
                   {user.situacaoTrabalho && (
-                    <div>
+                    <motion.div variants={itemVariants}>
                       <label className="block text-sm font-medium mb-1" style={{ color: themeColor }}>
                         Situação de Trabalho
                       </label>
                       <p className="text-gray-900 p-3 rounded-lg" style={{ backgroundColor: '#F9F4ED' }}>
                         {user.situacaoTrabalho}
                       </p>
-                    </div>
+                    </motion.div>
                   )}
                   {user.rendaMensal && (
-                    <div>
+                    <motion.div variants={itemVariants}>
                       <label className="block text-sm font-medium mb-1" style={{ color: themeColor }}>
                         Renda Mensal
                       </label>
                       <p className="text-gray-900 p-3 rounded-lg" style={{ backgroundColor: '#F9F4ED' }}>
                         R$ {user.rendaMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </p>
-                    </div>
+                    </motion.div>
                   )}
                   {user.escolaridade && (
-                    <div>
+                    <motion.div variants={itemVariants}>
                       <label className="block text-sm font-medium mb-1" style={{ color: themeColor }}>
                         Escolaridade
                       </label>
                       <p className="text-gray-900 p-3 rounded-lg" style={{ backgroundColor: '#F9F4ED' }}>
                         {user.escolaridade}
                       </p>
-                    </div>
+                    </motion.div>
                   )}
                 </>
               ) : (
                 <>
                   {user.areaAtuacao && (
-                    <div>
+                    <motion.div variants={itemVariants}>
                       <label className="block text-sm font-medium mb-1" style={{ color: themeColor }}>
                         Área de Atuação
                       </label>
                       <p className="text-gray-900 p-3 rounded-lg" style={{ backgroundColor: '#F9F4ED' }}>
                         {user.areaAtuacao}
                       </p>
-                    </div>
+                    </motion.div>
                   )}
                 </>
               )}
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
     );
   };
 
   // Tela de login
   if (loginStep === 'login') {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: '#F9F4ED' }}>
-        <div className="max-w-md w-full">
-          <div className="bg-white rounded-xl shadow-lg p-8">
-            <div className="mb-8 text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4" style={{ backgroundColor: '#A3B18A20' }}>
+      <motion.div 
+        className="min-h-screen flex items-center justify-center p-4" 
+        style={{ backgroundColor: '#F9F4ED' }}
+        initial="initial"
+        animate="in"
+        exit="out"
+        variants={pageVariants}
+        transition={pageTransition}
+      >
+        <motion.div 
+          className="max-w-md w-full"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          <motion.div 
+            className="bg-white rounded-xl shadow-lg p-8"
+            whileHover={{ y: -5, boxShadow: "0 25px 50px rgba(0,0,0,0.15)" }}
+            transition={{ duration: 0.3 }}
+          >
+            <motion.div className="mb-8 text-center" variants={itemVariants}>
+              <motion.div 
+                className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4" 
+                style={{ backgroundColor: '#A3B18A20' }}
+                whileHover={{ rotate: 360, scale: 1.1 }}
+                transition={{ duration: 0.6 }}
+              >
                 <span className="text-3xl">🔐</span>
-              </div>
-              <h2 className="text-2xl font-bold mb-2" style={{ color: '#4B6043' }}>
+              </motion.div>
+              <motion.h2 
+                className="text-2xl font-bold mb-2" 
+                style={{ color: '#4B6043' }}
+                variants={itemVariants}
+              >
                 Entrar na sua conta
-              </h2>
-              <p className="text-gray-600">Digite seu CPF e senha para acessar</p>
-            </div>
+              </motion.h2>
+              <motion.p 
+                className="text-gray-600"
+                variants={itemVariants}
+              >
+                Digite seu CPF e senha para acessar
+              </motion.p>
+            </motion.div>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              <div className="space-y-2">
+            <motion.form 
+              onSubmit={handleSubmit(onSubmit)} 
+              className="space-y-6"
+              variants={containerVariants}
+            >
+              <motion.div className="space-y-2" variants={itemVariants}>
                 <label className="block text-sm font-medium" style={{ color: '#4B6043' }}>
                   CPF
                 </label>
                 <CampoComErro error={errors.cpf?.message}>
-                  <input
+                  <motion.input
                     type="text"
                     placeholder="000.000.000-00"
                     maxLength={14}
@@ -245,77 +410,61 @@ export const LoginForm = () => {
                     className={`w-full p-4 border-2 rounded-xl text-base outline-none transition-all duration-200 ${
                       errors.cpf ? 'border-red-400 bg-red-50' : 'border-gray-200 bg-white'
                     }`}
-                    style={{
-                      borderColor: errors.cpf ? '#ef4444' : '#e5e7eb',
-                      backgroundColor: errors.cpf ? '#fef2f2' : '#ffffff'
-                    }}
-                    onFocus={(e) => {
-                      if (!errors.cpf) {
-                        e.target.style.borderColor = '#4B6043';
-                        e.target.style.backgroundColor = '#F9F4ED';
-                      }
-                    }}
-                    onBlur={(e) => {
-                      if (!errors.cpf) {
-                        e.target.style.borderColor = '#e5e7eb';
-                        e.target.style.backgroundColor = '#ffffff';
-                      }
-                    }}
+                    whileFocus={{ scale: 1.02, borderColor: '#4B6043' }}
+                    whileHover={{ borderColor: '#A3B18A' }}
                   />
                 </CampoComErro>
-              </div>
+              </motion.div>
 
-              <div className="space-y-2">
+              <motion.div className="space-y-2" variants={itemVariants}>
                 <label className="block text-sm font-medium" style={{ color: '#4B6043' }}>
                   Senha
                 </label>
                 <CampoComErro error={errors.senha?.message}>
-                  <input
+                  <motion.input
                     type="password"
                     placeholder="Digite sua senha"
                     {...register('senha')}
                     className={`w-full p-4 border-2 rounded-xl text-base outline-none transition-all duration-200 ${
                       errors.senha ? 'border-red-400 bg-red-50' : 'border-gray-200 bg-white'
                     }`}
-                    style={{
-                      borderColor: errors.senha ? '#ef4444' : '#e5e7eb',
-                      backgroundColor: errors.senha ? '#fef2f2' : '#ffffff'
-                    }}
-                    onFocus={(e) => {
-                      if (!errors.senha) {
-                        e.target.style.borderColor = '#4B6043';
-                        e.target.style.backgroundColor = '#F9F4ED';
-                      }
-                    }}
-                    onBlur={(e) => {
-                      if (!errors.senha) {
-                        e.target.style.borderColor = '#e5e7eb';
-                        e.target.style.backgroundColor = '#ffffff';
-                      }
-                    }}
+                    whileFocus={{ scale: 1.02, borderColor: '#4B6043' }}
+                    whileHover={{ borderColor: '#A3B18A' }}
                   />
                 </CampoComErro>
-              </div>
+              </motion.div>
 
-              {loginError && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <p className="text-red-600 text-sm">{loginError}</p>
-                </div>
-              )}
+              <AnimatePresence>
+                {loginError && (
+                  <motion.div 
+                    className="bg-red-50 border border-red-200 rounded-lg p-4"
+                    variants={errorVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="hidden"
+                  >
+                    <p className="text-red-600 text-sm">{loginError}</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-              <div className="pt-6">
-                <button
+              <motion.div className="pt-6" variants={itemVariants}>
+                <motion.button
                   type="submit"
                   disabled={isSubmitting}
                   className={`w-full py-4 px-6 rounded-xl text-white font-semibold text-base transition-all duration-200 flex items-center justify-center gap-3 shadow-lg ${
                     isSubmitting
-                      ? 'bg-gray-400 cursor-not-allowed transform scale-95'
-                      : 'transform hover:scale-105 hover:shadow-xl active:scale-95'
+                      ? 'bg-gray-400 cursor-not-allowed'
+                      : ''
                   }`}
                   style={{
                     backgroundColor: isSubmitting ? '#9ca3af' : '#4B6043',
                     boxShadow: isSubmitting ? 'none' : '0 4px 6px rgba(75, 96, 67, 0.2)',
                   }}
+                  variants={buttonVariants}
+                  initial="idle"
+                  whileHover={!isSubmitting ? "hover" : "idle"}
+                  whileTap={!isSubmitting ? "tap" : "idle"}
                 >
                   {isSubmitting ? (
                     <>
@@ -324,30 +473,40 @@ export const LoginForm = () => {
                     </>
                   ) : (
                     <>
-                      <span>🔐</span>
+                      <motion.span
+                        animate={{ rotate: [0, 10, -10, 0] }}
+                        transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 2 }}
+                      >
+                        🔐
+                      </motion.span>
                       Entrar
                     </>
                   )}
-                </button>
-              </div>
-            </form>
+                </motion.button>
+              </motion.div>
+            </motion.form>
 
-            <div className="mt-8 text-center">
+            <motion.div 
+              className="mt-8 text-center"
+              variants={itemVariants}
+            >
               <p className="text-gray-600 mb-4">
                 Não tem uma conta?{' '}
-                <button
+                <motion.button
                   type="button"
                   onClick={() => router.push('/')}
                   className="font-semibold ml-1 hover:underline transition-colors"
                   style={{ color: '#4B6043' }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
                   Cadastre-se
-                </button>
+                </motion.button>
               </p>
-            </div>
-          </div>
-        </div>
-      </div>
+            </motion.div>
+          </motion.div>
+        </motion.div>
+      </motion.div>
     );
   }
 

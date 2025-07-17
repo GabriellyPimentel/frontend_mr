@@ -3,6 +3,7 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { motion } from 'framer-motion';
 import { schemaMaeSolo } from '../../lib/validations/schemas';
 import { MaeSoloData } from '../../types';
 import { CampoComErro } from '../ui/CampoComErro';
@@ -52,30 +53,95 @@ export const FormularioMaeSolo: React.FC<FormularioMaeSoloProps> = ({ onSuccess 
     }
   };
 
-  return (
-    <div>
-      {/* Cabeçalho do formulário com ícone e título */}
-      <div className="mb-4 text-center">
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full mb-2 shadow-lg" style={{backgroundColor: '#A3B18A'}}>
-          <span className="text-xl">👩‍👧‍👦</span>
-        </div>
-        
-        <h2 className="text-xl font-bold mb-1" style={{color: '#4B6043'}}>
-          Cadastro de Mãe Solo
-        </h2>
-        
-        <p className="text-gray-600 text-sm">Preencha os dados para criar sua conta</p>
-      </div>
+  // Variantes de animação
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2
+      }
+    }
+  } as const;
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5 }
+    }
+  } as const;
+
+  const headerVariants = {
+    hidden: { opacity: 0, scale: 0.8 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      transition: { duration: 0.6, ease: "backOut" as const }
+    }
+  } as const;
+
+  const buttonVariants = {
+    idle: { scale: 1 },
+    hover: { 
+      scale: 1.05,
+      boxShadow: "0 10px 25px rgba(75, 96, 67, 0.3)",
+      transition: { duration: 0.2 }
+    },
+    tap: { scale: 0.95 }
+  } as const;
+
+  return (
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      {/* Cabeçalho do formulário com ícone e título */}
+      <motion.div 
+        className="mb-4 text-center"
+        variants={headerVariants}
+      >
+        <motion.div 
+          className="inline-flex items-center justify-center w-12 h-12 rounded-full mb-2 shadow-lg"
+          style={{backgroundColor: '#A3B18A'}}
+          whileHover={{ rotate: 360, scale: 1.1 }}
+          transition={{ duration: 0.6 }}
+        >
+          <span className="text-xl">👩‍👧‍👦</span>
+        </motion.div>
+        
+        <motion.h2 
+          className="text-xl font-bold mb-1"
+          style={{color: '#4B6043'}}
+          variants={itemVariants}
+        >
+          Cadastro de Mãe Solo
+        </motion.h2>
+        
+        <motion.p 
+          className="text-gray-600 text-sm"
+          variants={itemVariants}
+        >
+          Preencha os dados para criar sua conta
+        </motion.p>
+      </motion.div>
+
+      <motion.form 
+        onSubmit={handleSubmit(onSubmit)} 
+        className="space-y-4"
+        variants={containerVariants}
+      >
         
         {/* CAMPO: Nome Completo */}
-        <div className="space-y-1">
+        <motion.div className="space-y-1" variants={itemVariants}>
           <label className="block text-xs font-medium" style={{color: '#4B6043'}}>
             Nome completo *
           </label>
           <CampoComErro error={errors.nome?.message}>
-            <input
+            <motion.input
               type="text"
               placeholder="Digite seu nome completo"
               {...register('nome')}
@@ -84,33 +150,19 @@ export const FormularioMaeSolo: React.FC<FormularioMaeSoloProps> = ({ onSuccess 
                   ? 'border-red-400 focus:border-red-500 bg-red-50' 
                   : 'border-gray-200 focus:border-green-400 bg-white hover:border-gray-300'
               }`}
-              style={{
-                borderColor: errors.nome ? '#ef4444' : '#e5e7eb',
-                backgroundColor: errors.nome ? '#fef2f2' : '#ffffff'
-              }}
-              onFocus={(e) => {
-                if (!errors.nome) {
-                  e.target.style.borderColor = '#4B6043';
-                  e.target.style.backgroundColor = '#F9F4ED';
-                }
-              }}
-              onBlur={(e) => {
-                if (!errors.nome) {
-                  e.target.style.borderColor = '#e5e7eb';
-                  e.target.style.backgroundColor = '#ffffff';
-                }
-              }}
+              whileFocus={{ scale: 1.02, borderColor: '#4B6043' }}
+              whileHover={{ borderColor: '#A3B18A' }}
             />
           </CampoComErro>
-        </div>
+        </motion.div>
 
-        {/* CAMPO: CPF - ADICIONADO */}
-        <div className="space-y-1">
+        {/* CAMPO: CPF */}
+        <motion.div className="space-y-1" variants={itemVariants}>
           <label className="block text-xs font-medium" style={{color: '#4B6043'}}>
             CPF *
           </label>
           <CampoComErro error={errors.cpf?.message}>
-            <input
+            <motion.input
               type="text"
               placeholder="000.000.000-00"
               maxLength={14}
@@ -125,33 +177,19 @@ export const FormularioMaeSolo: React.FC<FormularioMaeSoloProps> = ({ onSuccess 
                   ? 'border-red-400 focus:border-red-500 bg-red-50' 
                   : 'border-gray-200 focus:border-green-400 bg-white hover:border-gray-300'
               }`}
-              style={{
-                borderColor: errors.cpf ? '#ef4444' : '#e5e7eb',
-                backgroundColor: errors.cpf ? '#fef2f2' : '#ffffff'
-              }}
-              onFocus={(e) => {
-                if (!errors.cpf) {
-                  e.target.style.borderColor = '#4B6043';
-                  e.target.style.backgroundColor = '#F9F4ED';
-                }
-              }}
-              onBlur={(e) => {
-                if (!errors.cpf) {
-                  e.target.style.borderColor = '#e5e7eb';
-                  e.target.style.backgroundColor = '#ffffff';
-                }
-              }}
+              whileFocus={{ scale: 1.02, borderColor: '#4B6043' }}
+              whileHover={{ borderColor: '#A3B18A' }}
             />
           </CampoComErro>
-        </div>
+        </motion.div>
 
         {/* CAMPO: Email */}
-        <div className="space-y-1">
+        <motion.div className="space-y-1" variants={itemVariants}>
           <label className="block text-xs font-medium" style={{color: '#4B6043'}}>
             Email
           </label>
           <CampoComErro error={errors.email?.message}>
-            <input
+            <motion.input
               type="email"
               placeholder="Digite seu email"
               {...register('email')}
@@ -160,33 +198,19 @@ export const FormularioMaeSolo: React.FC<FormularioMaeSoloProps> = ({ onSuccess 
                   ? 'border-red-400 focus:border-red-500 bg-red-50' 
                   : 'border-gray-200 focus:border-green-400 bg-white hover:border-gray-300'
               }`}
-              style={{
-                borderColor: errors.email ? '#ef4444' : '#e5e7eb',
-                backgroundColor: errors.email ? '#fef2f2' : '#ffffff'
-              }}
-              onFocus={(e) => {
-                if (!errors.email) {
-                  e.target.style.borderColor = '#4B6043';
-                  e.target.style.backgroundColor = '#F9F4ED';
-                }
-              }}
-              onBlur={(e) => {
-                if (!errors.email) {
-                  e.target.style.borderColor = '#e5e7eb';
-                  e.target.style.backgroundColor = '#ffffff';
-                }
-              }}
+              whileFocus={{ scale: 1.02, borderColor: '#4B6043' }}
+              whileHover={{ borderColor: '#A3B18A' }}
             />
           </CampoComErro>
-        </div>
+        </motion.div>
 
         {/* CAMPO: Senha */}
-        <div className="space-y-1">
+        <motion.div className="space-y-1" variants={itemVariants}>
           <label className="block text-xs font-medium" style={{color: '#4B6043'}}>
             Senha *
           </label>
           <CampoComErro error={errors.senha?.message}>
-            <input
+            <motion.input
               type="password"
               placeholder="Mínimo 6 caracteres"
               {...register('senha')}
@@ -195,35 +219,24 @@ export const FormularioMaeSolo: React.FC<FormularioMaeSoloProps> = ({ onSuccess 
                   ? 'border-red-400 focus:border-red-500 bg-red-50' 
                   : 'border-gray-200 focus:border-green-400 bg-white hover:border-gray-300'
               }`}
-              style={{
-                borderColor: errors.senha ? '#ef4444' : '#e5e7eb',
-                backgroundColor: errors.senha ? '#fef2f2' : '#ffffff'
-              }}
-              onFocus={(e) => {
-                if (!errors.senha) {
-                  e.target.style.borderColor = '#4B6043';
-                  e.target.style.backgroundColor = '#F9F4ED';
-                }
-              }}
-              onBlur={(e) => {
-                if (!errors.senha) {
-                  e.target.style.borderColor = '#e5e7eb';
-                  e.target.style.backgroundColor = '#ffffff';
-                }
-              }}
+              whileFocus={{ scale: 1.02, borderColor: '#4B6043' }}
+              whileHover={{ borderColor: '#A3B18A' }}
             />
           </CampoComErro>
-        </div>
+        </motion.div>
 
         {/* GRID: Telefone e Data de Nascimento */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <motion.div 
+          className="grid grid-cols-1 md:grid-cols-2 gap-4"
+          variants={itemVariants}
+        >
           {/* CAMPO: Telefone */}
           <div className="space-y-1">
             <label className="block text-xs font-medium" style={{color: '#4B6043'}}>
               Telefone *
             </label>
             <CampoComErro error={errors.telefone?.message}>
-              <input
+              <motion.input
                 type="tel"
                 placeholder="(11) 99999-9999"
                 maxLength={15}
@@ -238,33 +251,19 @@ export const FormularioMaeSolo: React.FC<FormularioMaeSoloProps> = ({ onSuccess 
                     ? 'border-red-400 focus:border-red-500 bg-red-50' 
                     : 'border-gray-200 focus:border-green-400 bg-white hover:border-gray-300'
                 }`}
-                style={{
-                  borderColor: errors.telefone ? '#ef4444' : '#e5e7eb',
-                  backgroundColor: errors.telefone ? '#fef2f2' : '#ffffff'
-                }}
-                onFocus={(e) => {
-                  if (!errors.telefone) {
-                    e.target.style.borderColor = '#4B6043';
-                    e.target.style.backgroundColor = '#F9F4ED';
-                  }
-                }}
-                onBlur={(e) => {
-                  if (!errors.telefone) {
-                    e.target.style.borderColor = '#e5e7eb';
-                    e.target.style.backgroundColor = '#ffffff';
-                  }
-                }}
+                whileFocus={{ scale: 1.02, borderColor: '#4B6043' }}
+                whileHover={{ borderColor: '#A3B18A' }}
               />
             </CampoComErro>
           </div>
 
-          {/* CAMPO: Data de Nascimento - ADICIONADO */}
+          {/* CAMPO: Data de Nascimento */}
           <div className="space-y-1">
             <label className="block text-xs font-medium" style={{color: '#4B6043'}}>
               Data de Nascimento *
             </label>
             <CampoComErro error={errors.dataNascimento?.message}>
-              <input
+              <motion.input
                 type="date"
                 {...register('dataNascimento')}
                 className={`w-full p-3 border-2 rounded-xl text-sm outline-none transition-all duration-200 ${
@@ -272,34 +271,20 @@ export const FormularioMaeSolo: React.FC<FormularioMaeSoloProps> = ({ onSuccess 
                     ? 'border-red-400 focus:border-red-500 bg-red-50' 
                     : 'border-gray-200 focus:border-green-400 bg-white hover:border-gray-300'
                 }`}
-                style={{
-                  borderColor: errors.dataNascimento ? '#ef4444' : '#e5e7eb',
-                  backgroundColor: errors.dataNascimento ? '#fef2f2' : '#ffffff'
-                }}
-                onFocus={(e) => {
-                  if (!errors.dataNascimento) {
-                    e.target.style.borderColor = '#4B6043';
-                    e.target.style.backgroundColor = '#F9F4ED';
-                  }
-                }}
-                onBlur={(e) => {
-                  if (!errors.dataNascimento) {
-                    e.target.style.borderColor = '#e5e7eb';
-                    e.target.style.backgroundColor = '#ffffff';
-                  }
-                }}
+                whileFocus={{ scale: 1.02, borderColor: '#4B6043' }}
+                whileHover={{ borderColor: '#A3B18A' }}
               />
             </CampoComErro>
           </div>
-        </div>
+        </motion.div>
 
         {/* CAMPO: Endereço */}
-        <div className="space-y-1">
+        <motion.div className="space-y-1" variants={itemVariants}>
           <label className="block text-xs font-medium" style={{color: '#4B6043'}}>
             Endereço *
           </label>
           <CampoComErro error={errors.endereco?.message}>
-            <input
+            <motion.input
               type="text"
               placeholder="Endereço completo"
               {...register('endereco')}
@@ -308,33 +293,19 @@ export const FormularioMaeSolo: React.FC<FormularioMaeSoloProps> = ({ onSuccess 
                   ? 'border-red-400 focus:border-red-500 bg-red-50' 
                   : 'border-gray-200 focus:border-green-400 bg-white hover:border-gray-300'
               }`}
-              style={{
-                borderColor: errors.endereco ? '#ef4444' : '#e5e7eb',
-                backgroundColor: errors.endereco ? '#fef2f2' : '#ffffff'
-              }}
-              onFocus={(e) => {
-  if (!errors.endereco) {
-    (e.target as HTMLInputElement).style.borderColor = '#4B6043';
-    (e.target as HTMLInputElement).style.backgroundColor = '#F9F4ED';
-  }
-}}
-              onBlur={(e) => {
-  if (!errors.endereco) {
-    (e.target as HTMLInputElement).style.borderColor = '#e5e7eb';
-    (e.target as HTMLInputElement).style.backgroundColor = '#ffffff';
-  }
-}}
+              whileFocus={{ scale: 1.02, borderColor: '#4B6043' }}
+              whileHover={{ borderColor: '#A3B18A' }}
             />
           </CampoComErro>
-        </div>
+        </motion.div>
 
-        {/* GRID: Renda Mensal */}
-        <div className="space-y-1">
+        {/* CAMPO: Renda Mensal */}
+        <motion.div className="space-y-1" variants={itemVariants}>
           <label className="block text-xs font-medium" style={{color: '#4B6043'}}>
             Renda Mensal *
           </label>
           <CampoComErro error={errors.rendaMensal?.message}>
-            <input
+            <motion.input
               type="number"
               placeholder="R$ 0,00"
               step="0.01"
@@ -345,57 +316,32 @@ export const FormularioMaeSolo: React.FC<FormularioMaeSoloProps> = ({ onSuccess 
                   ? 'border-red-400 focus:border-red-500 bg-red-50' 
                   : 'border-gray-200 focus:border-green-400 bg-white hover:border-gray-300'
               }`}
-              style={{
-                borderColor: errors.rendaMensal ? '#ef4444' : '#e5e7eb',
-                backgroundColor: errors.rendaMensal ? '#fef2f2' : '#ffffff'
-              }}
-             onFocus={(e) => {
-  if (!errors.rendaMensal) {
-    (e.target as HTMLInputElement).style.borderColor = '#4B6043';
-    (e.target as HTMLInputElement).style.backgroundColor = '#F9F4ED';
-  }
-}}
-onBlur={(e) => {
-  if (!errors.rendaMensal) {
-    (e.target as HTMLInputElement).style.borderColor = '#e5e7eb';
-    (e.target as HTMLInputElement).style.backgroundColor = '#ffffff';
-  }
-}}
+              whileFocus={{ scale: 1.02, borderColor: '#4B6043' }}
+              whileHover={{ borderColor: '#A3B18A' }}
             />
           </CampoComErro>
-        </div>
+        </motion.div>
 
         {/* GRID: Situação de Trabalho e Escolaridade */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <motion.div 
+          className="grid grid-cols-1 md:grid-cols-2 gap-4"
+          variants={itemVariants}
+        >
           {/* CAMPO: Situação de Trabalho - SELECT */}
           <div className="space-y-1">
             <label className="block text-xs font-medium" style={{color: '#4B6043'}}>
               Situação de Trabalho *
             </label>
             <CampoComErro error={errors.situacaoTrabalho?.message}>
-              <select
+              <motion.select
                 {...register('situacaoTrabalho')}
                 className={`w-full p-3 border-2 rounded-xl text-sm outline-none transition-all duration-200 ${
                   errors.situacaoTrabalho 
                     ? 'border-red-400 focus:border-red-500 bg-red-50' 
                     : 'border-gray-200 focus:border-green-400 bg-white hover:border-gray-300'
                 }`}
-                style={{
-                  borderColor: errors.situacaoTrabalho ? '#ef4444' : '#e5e7eb',
-                  backgroundColor: errors.situacaoTrabalho ? '#fef2f2' : '#ffffff'
-                }}
-                onFocus={(e) => {
-                  if (!errors.situacaoTrabalho) {
-                    e.target.style.borderColor = '#4B6043';
-                    e.target.style.backgroundColor = '#F9F4ED';
-                  }
-                }}
-                onBlur={(e) => {
-                  if (!errors.situacaoTrabalho) {
-                    e.target.style.borderColor = '#e5e7eb';
-                    e.target.style.backgroundColor = '#ffffff';
-                  }
-                }}
+                whileFocus={{ scale: 1.02, borderColor: '#4B6043' }}
+                whileHover={{ borderColor: '#A3B18A' }}
               >
                 <option value="">Selecione sua situação</option>
                 <option value="empregada_clt">Empregada (CLT)</option>
@@ -406,7 +352,7 @@ onBlur={(e) => {
                 <option value="estudante">Estudante</option>
                 <option value="do_lar">Do lar</option>
                 <option value="outros">Outros</option>
-              </select>
+              </motion.select>
             </CampoComErro>
           </div>
 
@@ -416,64 +362,44 @@ onBlur={(e) => {
               Escolaridade *
             </label>
             <CampoComErro error={errors.escolaridade?.message}>
-              <select
+              <motion.select
                 {...register('escolaridade')}
                 className={`w-full p-3 border-2 rounded-xl text-sm outline-none transition-all duration-200 ${
                   errors.escolaridade 
                     ? 'border-red-400 focus:border-red-500 bg-red-50' 
                     : 'border-gray-200 focus:border-green-400 bg-white hover:border-gray-300'
                 }`}
-                style={{
-                  borderColor: errors.escolaridade ? '#ef4444' : '#e5e7eb',
-                  backgroundColor: errors.escolaridade ? '#fef2f2' : '#ffffff'
-                }}
-                onFocus={(e) => {
-                  if (!errors.escolaridade) {
-                    e.target.style.borderColor = '#4B6043';
-                    e.target.style.backgroundColor = '#F9F4ED';
-                  }
-                }}
-                onBlur={(e) => {
-                  if (!errors.escolaridade) {
-                    e.target.style.borderColor = '#e5e7eb';
-                    e.target.style.backgroundColor = '#ffffff';
-                  }
-                }}
+                whileFocus={{ scale: 1.02, borderColor: '#4B6043' }}
+                whileHover={{ borderColor: '#A3B18A' }}
               >
                 <option value="">Selecione sua escolaridade</option>
                 <option value="medioIncompleto">Médio Incompleto</option>
                 <option value="medioCompleto">Médio Completo</option>
                 <option value="superiorIncompleto">Superior Incompleto</option>
                 <option value="superiorCompleto">Superior Completo</option>
-              </select>
+              </motion.select>
             </CampoComErro>
           </div>
-        </div>
+        </motion.div>
 
         {/* BOTÃO DE ENVIO */}
-        <div className="pt-4">
-          <button
+        <motion.div className="pt-4" variants={itemVariants}>
+          <motion.button
             type="submit"
             disabled={isSubmitting}
             className={`w-full py-3 px-6 rounded-xl text-white font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-3 shadow-lg ${
               isSubmitting 
-                ? 'bg-gray-400 cursor-not-allowed transform scale-95' 
-                : 'transform hover:scale-105 hover:shadow-xl active:scale-95'
+                ? 'bg-gray-400 cursor-not-allowed' 
+                : ''
             }`}
             style={{
               backgroundColor: isSubmitting ? '#9ca3af' : '#4B6043',
               boxShadow: isSubmitting ? 'none' : '0 4px 6px rgba(75, 96, 67, 0.2)'
             }}
-            onMouseEnter={(e) => {
-              if (!isSubmitting) {
-(e.target as HTMLButtonElement).style.backgroundColor = '#3d4e37'; 
-  }
-}}
-            onMouseLeave={(e) => {
-  if (!isSubmitting) {
-    (e.target as HTMLButtonElement).style.backgroundColor = '#4B6043';
-  }
-}}
+            variants={buttonVariants}
+            initial="idle"
+            whileHover={!isSubmitting ? "hover" : "idle"}
+            whileTap={!isSubmitting ? "tap" : "idle"}
           >
             {isSubmitting ? (
               <>
@@ -482,13 +408,18 @@ onBlur={(e) => {
               </>
             ) : (
               <>
-                <span>👩‍👧‍👦</span>
+                <motion.span
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 2 }}
+                >
+                  👩‍👧‍👦
+                </motion.span>
                 Cadastrar
               </>
             )}
-          </button>
-        </div>
-      </form>
-    </div>
+          </motion.button>
+        </motion.div>
+      </motion.form>
+    </motion.div>
   );
 };

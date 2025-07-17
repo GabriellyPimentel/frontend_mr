@@ -3,6 +3,7 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { motion } from 'framer-motion';
 import { schemaProfissional } from '../../lib/validations/schemas';
 import { ProfissionalData } from '../../types';
 import { CampoComErro } from '../ui/CampoComErro';
@@ -52,30 +53,95 @@ export const FormularioProfissional: React.FC<FormularioProfissionalProps> = ({ 
     }
   };
 
+  // Variantes de animação
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2
+      }
+    }
+  } as const;
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5 }
+    }
+  } as const;
+
+  const headerVariants = {
+    hidden: { opacity: 0, scale: 0.8 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      transition: { duration: 0.6, ease: "backOut" as const }
+    }
+  } as const;
+
+  const buttonVariants = {
+    idle: { scale: 1 },
+    hover: { 
+      scale: 1.05,
+      boxShadow: "0 10px 25px rgba(177, 120, 83, 0.3)",
+      transition: { duration: 0.2 }
+    },
+    tap: { scale: 0.95 }
+  } as const;
+
   return (
-    <div>
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
       {/* Cabeçalho do formulário com tema profissional */}
-      <div className="mb-4 text-center">
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full mb-2 shadow-lg" style={{backgroundColor: '#B17853'}}>
+      <motion.div 
+        className="mb-4 text-center"
+        variants={headerVariants}
+      >
+        <motion.div 
+          className="inline-flex items-center justify-center w-12 h-12 rounded-full mb-2 shadow-lg"
+          style={{backgroundColor: '#B17853'}}
+          whileHover={{ rotate: 360, scale: 1.1 }}
+          transition={{ duration: 0.6 }}
+        >
           <span className="text-xl">🩺</span>
-        </div>
+        </motion.div>
         
-        <h2 className="text-xl font-bold mb-1" style={{color: '#B17853'}}>
+        <motion.h2 
+          className="text-xl font-bold mb-1"
+          style={{color: '#B17853'}}
+          variants={itemVariants}
+        >
           Cadastro de Profissional
-        </h2>
+        </motion.h2>
         
-        <p className="text-gray-600 text-sm">Preencha os dados para criar sua conta profissional</p>
-      </div>
+        <motion.p 
+          className="text-gray-600 text-sm"
+          variants={itemVariants}
+        >
+          Preencha os dados para criar sua conta profissional
+        </motion.p>
+      </motion.div>
       
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <motion.form 
+        onSubmit={handleSubmit(onSubmit)} 
+        className="space-y-4"
+        variants={containerVariants}
+      >
         
         {/* CAMPO: Nome Completo */}
-        <div className="space-y-1">
+        <motion.div className="space-y-1" variants={itemVariants}>
           <label className="block text-xs font-medium" style={{color: '#B17853'}}>
             Nome completo *
           </label>
           <CampoComErro error={errors.nome?.message}>
-            <input
+            <motion.input
               type="text"
               placeholder="Digite seu nome completo"
               {...register('nome')}
@@ -84,33 +150,19 @@ export const FormularioProfissional: React.FC<FormularioProfissionalProps> = ({ 
                   ? 'border-red-400 focus:border-red-500 bg-red-50' 
                   : 'border-gray-200 focus:border-amber-400 bg-white hover:border-gray-300'
               }`}
-              style={{
-                borderColor: errors.nome ? '#ef4444' : '#e5e7eb',
-                backgroundColor: errors.nome ? '#fef2f2' : '#ffffff'
-              }}
-              onFocus={(e) => {
-                if (!errors.nome) {
-                  (e.target as HTMLInputElement).style.borderColor = '#B17853';
-                  (e.target as HTMLInputElement).style.backgroundColor = '#F9F4ED';
-                }
-              }}
-              onBlur={(e) => {
-                if (!errors.nome) {
-                  (e.target as HTMLInputElement).style.borderColor = '#e5e7eb';
-                  (e.target as HTMLInputElement).style.backgroundColor = '#ffffff';
-                }
-              }}
+              whileFocus={{ scale: 1.02, borderColor: '#B17853' }}
+              whileHover={{ borderColor: '#D4A574' }}
             />
           </CampoComErro>
-        </div>
+        </motion.div>
 
-        {/* CAMPO: CPF - ADICIONADO */}
-        <div className="space-y-1">
+        {/* CAMPO: CPF */}
+        <motion.div className="space-y-1" variants={itemVariants}>
           <label className="block text-xs font-medium" style={{color: '#B17853'}}>
             CPF *
           </label>
           <CampoComErro error={errors.cpf?.message}>
-            <input
+            <motion.input
               type="text"
               placeholder="000.000.000-00"
               maxLength={14}
@@ -125,33 +177,19 @@ export const FormularioProfissional: React.FC<FormularioProfissionalProps> = ({ 
                   ? 'border-red-400 focus:border-red-500 bg-red-50' 
                   : 'border-gray-200 focus:border-amber-400 bg-white hover:border-gray-300'
               }`}
-              style={{
-                borderColor: errors.cpf ? '#ef4444' : '#e5e7eb',
-                backgroundColor: errors.cpf ? '#fef2f2' : '#ffffff'
-              }}
-              onFocus={(e) => {
-                if (!errors.cpf) {
-                  (e.target as HTMLInputElement).style.borderColor = '#B17853';
-                  (e.target as HTMLInputElement).style.backgroundColor = '#F9F4ED';
-                }
-              }}
-              onBlur={(e) => {
-                if (!errors.cpf) {
-                  (e.target as HTMLInputElement).style.borderColor = '#e5e7eb';
-                  (e.target as HTMLInputElement).style.backgroundColor = '#ffffff';
-                }
-              }}
+              whileFocus={{ scale: 1.02, borderColor: '#B17853' }}
+              whileHover={{ borderColor: '#D4A574' }}
             />
           </CampoComErro>
-        </div>
+        </motion.div>
         
         {/* CAMPO: Email */}
-        <div className="space-y-1">
+        <motion.div className="space-y-1" variants={itemVariants}>
           <label className="block text-xs font-medium" style={{color: '#B17853'}}>
             Email
           </label>
           <CampoComErro error={errors.email?.message}>
-            <input
+            <motion.input
               type="email"
               placeholder="Digite seu email profissional"
               {...register('email')}
@@ -160,33 +198,19 @@ export const FormularioProfissional: React.FC<FormularioProfissionalProps> = ({ 
                   ? 'border-red-400 focus:border-red-500 bg-red-50' 
                   : 'border-gray-200 focus:border-amber-400 bg-white hover:border-gray-300'
               }`}
-              style={{
-                borderColor: errors.email ? '#ef4444' : '#e5e7eb',
-                backgroundColor: errors.email ? '#fef2f2' : '#ffffff'
-              }}
-              onFocus={(e) => {
-                if (!errors.email) {
-                  (e.target as HTMLInputElement).style.borderColor = '#B17853';
-                  (e.target as HTMLInputElement).style.backgroundColor = '#F9F4ED';
-                }
-              }}
-              onBlur={(e) => {
-                if (!errors.email) {
-                  (e.target as HTMLInputElement).style.borderColor = '#e5e7eb';
-                  (e.target as HTMLInputElement).style.backgroundColor = '#ffffff';
-                }
-              }}
+              whileFocus={{ scale: 1.02, borderColor: '#B17853' }}
+              whileHover={{ borderColor: '#D4A574' }}
             />
           </CampoComErro>
-        </div>
+        </motion.div>
         
         {/* CAMPO: Senha */}
-        <div className="space-y-1">
+        <motion.div className="space-y-1" variants={itemVariants}>
           <label className="block text-xs font-medium" style={{color: '#B17853'}}>
             Senha *
           </label>
           <CampoComErro error={errors.senha?.message}>
-            <input
+            <motion.input
               type="password"
               placeholder="Mínimo 6 caracteres"
               {...register('senha')}
@@ -195,35 +219,24 @@ export const FormularioProfissional: React.FC<FormularioProfissionalProps> = ({ 
                   ? 'border-red-400 focus:border-red-500 bg-red-50' 
                   : 'border-gray-200 focus:border-amber-400 bg-white hover:border-gray-300'
               }`}
-              style={{
-                borderColor: errors.senha ? '#ef4444' : '#e5e7eb',
-                backgroundColor: errors.senha ? '#fef2f2' : '#ffffff'
-              }}
-              onFocus={(e) => {
-                if (!errors.senha) {
-                  (e.target as HTMLInputElement).style.borderColor = '#B17853';
-                  (e.target as HTMLInputElement).style.backgroundColor = '#F9F4ED';
-                }
-              }}
-              onBlur={(e) => {
-                if (!errors.senha) {
-                  (e.target as HTMLInputElement).style.borderColor = '#e5e7eb';
-                  (e.target as HTMLInputElement).style.backgroundColor = '#ffffff';
-                }
-              }}
+              whileFocus={{ scale: 1.02, borderColor: '#B17853' }}
+              whileHover={{ borderColor: '#D4A574' }}
             />
           </CampoComErro>
-        </div>
+        </motion.div>
         
         {/* GRID: Telefone e Profissão */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <motion.div 
+          className="grid grid-cols-1 md:grid-cols-2 gap-4"
+          variants={itemVariants}
+        >
           {/* CAMPO: Telefone */}
           <div className="space-y-1">
             <label className="block text-xs font-medium" style={{color: '#B17853'}}>
               Telefone *
             </label>
             <CampoComErro error={errors.telefone?.message}>
-              <input
+              <motion.input
                 type="tel"
                 placeholder="(11) 99999-9999"
                 maxLength={15}
@@ -238,22 +251,8 @@ export const FormularioProfissional: React.FC<FormularioProfissionalProps> = ({ 
                     ? 'border-red-400 focus:border-red-500 bg-red-50' 
                     : 'border-gray-200 focus:border-amber-400 bg-white hover:border-gray-300'
                 }`}
-                style={{
-                  borderColor: errors.telefone ? '#ef4444' : '#e5e7eb',
-                  backgroundColor: errors.telefone ? '#fef2f2' : '#ffffff'
-                }}
-                onFocus={(e) => {
-                  if (!errors.telefone) {
-                    (e.target as HTMLInputElement).style.borderColor = '#B17853';
-                    (e.target as HTMLInputElement).style.backgroundColor = '#F9F4ED';
-                  }
-                }}
-                onBlur={(e) => {
-                  if (!errors.telefone) {
-                    (e.target as HTMLInputElement).style.borderColor = '#e5e7eb';
-                    (e.target as HTMLInputElement).style.backgroundColor = '#ffffff';
-                  }
-                }}
+                whileFocus={{ scale: 1.02, borderColor: '#B17853' }}
+                whileHover={{ borderColor: '#D4A574' }}
               />
             </CampoComErro>
           </div>
@@ -264,29 +263,15 @@ export const FormularioProfissional: React.FC<FormularioProfissionalProps> = ({ 
               Área de Atuação *
             </label>
             <CampoComErro error={errors.areaAtuacao?.message}>
-              <select
+              <motion.select
                 {...register('areaAtuacao')}
                 className={`w-full p-3 border-2 rounded-xl text-sm outline-none transition-all duration-200 ${
                   errors.areaAtuacao 
                     ? 'border-red-400 focus:border-red-500 bg-red-50' 
                     : 'border-gray-200 focus:border-amber-400 bg-white hover:border-gray-300'
                 }`}
-                style={{
-                  borderColor: errors.areaAtuacao ? '#ef4444' : '#e5e7eb',
-                  backgroundColor: errors.areaAtuacao ? '#fef2f2' : '#ffffff'
-                }}
-                onFocus={(e) => {
-                  if (!errors.areaAtuacao) {
-                    (e.target as HTMLSelectElement).style.borderColor = '#B17853';
-                    (e.target as HTMLSelectElement).style.backgroundColor = '#F9F4ED';
-                  }
-                }}
-                onBlur={(e) => {
-                  if (!errors.areaAtuacao) {
-                    (e.target as HTMLSelectElement).style.borderColor = '#e5e7eb';
-                    (e.target as HTMLSelectElement).style.backgroundColor = '#ffffff';
-                  }
-                }}
+                whileFocus={{ scale: 1.02, borderColor: '#B17853' }}
+                whileHover={{ borderColor: '#D4A574' }}
               >
                 <option value="">Selecione sua área</option>
                 <option value="Psicologia">Psicologia</option>
@@ -296,35 +281,29 @@ export const FormularioProfissional: React.FC<FormularioProfissionalProps> = ({ 
                 <option value="Nutrição">Nutrição</option>
                 <option value="Pedagogia">Pedagogia</option>
                 <option value="Outros">Outros</option>
-              </select>
+              </motion.select>
             </CampoComErro>
           </div>
-        </div>
+        </motion.div>
         
         {/* BOTÃO DE ENVIO */}
-        <div className="pt-4">
-          <button
+        <motion.div className="pt-4" variants={itemVariants}>
+          <motion.button
             type="submit"
             disabled={isSubmitting}
             className={`w-full py-3 px-6 rounded-xl text-white font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-3 shadow-lg ${
               isSubmitting 
-                ? 'bg-gray-400 cursor-not-allowed transform scale-95' 
-                : 'transform hover:scale-105 hover:shadow-xl active:scale-95'
+                ? 'bg-gray-400 cursor-not-allowed' 
+                : ''
             }`}
             style={{
               backgroundColor: isSubmitting ? '#9ca3af' : '#B17853',
               boxShadow: isSubmitting ? 'none' : '0 4px 6px rgba(177, 120, 83, 0.2)'
             }}
-            onMouseEnter={(e) => {
-              if (!isSubmitting) {
-                (e.target as HTMLButtonElement).style.backgroundColor = '#9d6545';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isSubmitting) {
-                (e.target as HTMLButtonElement).style.backgroundColor = '#B17853';
-              }
-            }}
+            variants={buttonVariants}
+            initial="idle"
+            whileHover={!isSubmitting ? "hover" : "idle"}
+            whileTap={!isSubmitting ? "tap" : "idle"}
           >
             {isSubmitting ? (
               <>
@@ -333,13 +312,18 @@ export const FormularioProfissional: React.FC<FormularioProfissionalProps> = ({ 
               </>
             ) : (
               <>
-                <span>🩺</span>
+                <motion.span
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 2 }}
+                >
+                  🩺
+                </motion.span>
                 Cadastrar como Profissional
               </>
             )}
-          </button>
-        </div>
-      </form>
-    </div>
+          </motion.button>
+        </motion.div>
+      </motion.form>
+    </motion.div>
   );
 };
