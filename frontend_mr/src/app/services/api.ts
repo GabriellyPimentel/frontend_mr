@@ -1,8 +1,16 @@
-// src/app/services/api.ts - APENAS API REAL
+// src/app/services/api.ts - API com fallback local
 import { MaeSoloData, ProfissionalData } from '../types';
+import { 
+  cadastrarMaeSoloLocal, 
+  cadastrarProfissionalLocal, 
+  loginLocal 
+} from './localAuth';
 
 // 🔗 URL da sua API no Render
 const API_BASE_URL = 'https://backend-mr.onrender.com';
+
+// ⚙️ Configuração - mude para false quando quiser usar a API real
+const USE_LOCAL_STORAGE = true;
 
 interface ApiResponse {
   success?: boolean;
@@ -53,8 +61,13 @@ const makeRequest = async (endpoint: string, options: RequestInit): Promise<ApiR
 
 // 👩‍👧‍👦 Cadastro de mãe solo
 export const cadastrarMaeSolo = async (data: MaeSoloData): Promise<void> => {
+  if (USE_LOCAL_STORAGE) {
+    console.log('📱 Usando armazenamento local para mãe solo');
+    return cadastrarMaeSoloLocal(data);
+  }
+
   try {
-    console.log('📝 Cadastrando mãe solo...');
+    console.log('📝 Cadastrando mãe solo na API...');
     
     // Extrair ano, mês e dia da data de nascimento
     const dataNasc = new Date(data.dataNascimento);
@@ -85,17 +98,23 @@ export const cadastrarMaeSolo = async (data: MaeSoloData): Promise<void> => {
       body: JSON.stringify(backendData),
     });
     
-    console.log('✅ Mãe solo cadastrada com sucesso!');
+    console.log('✅ Mãe solo cadastrada com sucesso na API!');
   } catch (error) {
-    console.error('❌ Erro ao cadastrar mãe solo:', error);
-    throw new Error('Erro ao cadastrar. Verifique os dados e tente novamente.');
+    console.error('❌ Erro ao cadastrar mãe solo na API:', error);
+    console.log('🔄 Tentando usar armazenamento local como fallback...');
+    return cadastrarMaeSoloLocal(data);
   }
 };
 
 // 🩺 Cadastro de profissional
 export const cadastrarProfissional = async (data: ProfissionalData): Promise<void> => {
+  if (USE_LOCAL_STORAGE) {
+    console.log('📱 Usando armazenamento local para profissional');
+    return cadastrarProfissionalLocal(data);
+  }
+
   try {
-    console.log('📝 Cadastrando profissional...');
+    console.log('📝 Cadastrando profissional na API...');
     
     const backendData = {
       nome: data.nome,
@@ -111,17 +130,23 @@ export const cadastrarProfissional = async (data: ProfissionalData): Promise<voi
       body: JSON.stringify(backendData),
     });
     
-    console.log('✅ Profissional cadastrado com sucesso!');
+    console.log('✅ Profissional cadastrado com sucesso na API!');
   } catch (error) {
-    console.error('❌ Erro ao cadastrar profissional:', error);
-    throw new Error('Erro ao cadastrar. Verifique os dados e tente novamente.');
+    console.error('❌ Erro ao cadastrar profissional na API:', error);
+    console.log('🔄 Tentando usar armazenamento local como fallback...');
+    return cadastrarProfissionalLocal(data);
   }
 };
 
 // 🔐 Login
 export const login = async (cpf: string, senha: string): Promise<any> => {
+  if (USE_LOCAL_STORAGE) {
+    console.log('📱 Usando armazenamento local para login');
+    return loginLocal(cpf, senha);
+  }
+
   try {
-    console.log('🔐 Fazendo login...');
+    console.log('🔐 Fazendo login na API...');
     
     const response = await makeRequest('/auth/login', {
       method: 'POST',
@@ -131,10 +156,11 @@ export const login = async (cpf: string, senha: string): Promise<any> => {
       }),
     });
     
-    console.log('✅ Login realizado com sucesso!');
+    console.log('✅ Login realizado com sucesso na API!');
     return response.usuario || response.data;
   } catch (error) {
-    console.error('❌ Erro no login:', error);
-    throw new Error('CPF ou senha incorretos.');
+    console.error('❌ Erro no login da API:', error);
+    console.log('🔄 Tentando usar armazenamento local como fallback...');
+    return loginLocal(cpf, senha);
   }
 };
