@@ -1,5 +1,11 @@
-import { useState, useMemo } from 'react';
-import { Baby, Calendar, Clock, Edit2, FileText, Heart, MapPin, Phone, Plus, User } from 'lucide-react';
+'use client';
+
+import { useState, useMemo, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { Baby, Calendar, Clock, Edit2, FileText, Heart, MapPin, Phone, Plus, User, LogOut } from 'lucide-react';
+import { getCurrentUserLocal, logoutLocal } from '../../services/localAuth';
+import { User as UserType } from '../../types';
+import { useRouter } from 'next/navigation';
 
 // Tipos de dados
 type PerfilMae = {
@@ -61,31 +67,73 @@ type StatCardProps = {
 };
 
 const StatCard = ({ title, value, subtitle, icon, color = 'bg-[#475F3C]', className = '' }: StatCardProps) => (
-    <div className={`bg-white rounded-lg shadow-md p-6 border-l-4 border-[#475F3C] ${className}`}>
+    <motion.div 
+        className={`bg-white rounded-lg shadow-md p-6 border-l-4 border-[#475F3C] ${className}`}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        whileHover={{ y: -5, boxShadow: "0 10px 25px rgba(0,0,0,0.1)" }}
+    >
         <div className="flex items-center justify-between">
             <div>
                 <p className="text-sm font-medium text-gray-600">{title}</p>
                 <p className="text-2xl font-bold text-gray-900">{value}</p>
                 {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
             </div>
-            <div className={`${color} p-3 rounded-full text-white`}>
+            <motion.div 
+                className={`${color} p-3 rounded-full text-white`}
+                whileHover={{ rotate: 360 }}
+                transition={{ duration: 0.6 }}
+            >
                 {icon}
-            </div>
+            </motion.div>
         </div>
-    </div>
+    </motion.div>
 );
 
 // Componente principal
 export default function MaternalDashboard() {
-    // Estados
+    const [currentUser, setCurrentUser] = useState<UserType | null>(null);
+    const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<TabType>('overview');
     const [showAddChild, setShowAddChild] = useState(false);
     const [selectedChild, setSelectedChild] = useState<Filho | null>(null);
     const [formData, setFormData] = useState<Partial<Filho>>({});
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+    const router = useRouter();
+
+    // Carrega dados do usuário logado
+    useEffect(() => {
+        console.log('🔍 MaePage: Iniciando verificação de usuário...');
+        
+        try {
+            const user = getCurrentUserLocal();
+            console.log('👤 Usuário encontrado:', user);
+            
+            if (!user) {
+                console.log('❌ Nenhum usuário logado, redirecionando...');
+                router.push('/login');
+                return;
+            }
+            
+            if (user.tipo !== 'mae_solo') {
+                console.log('❌ Usuário não é mãe solo:', user.tipo);
+                router.push('/login');
+                return;
+            }
+            
+            console.log('✅ Usuário válido carregado:', user.nome);
+            setCurrentUser(user);
+            
+        } catch (err) {
+            console.error('❌ Erro ao carregar usuário:', err);
+        } finally {
+            setLoading(false);
+        }
+    }, [router]);
 
     // Dados mockados (substituir por chamadas API em produção)
-    const [perfilMae] = useState<PerfilMae>({
+    const [perfilMae, setPerfilMae] = useState<PerfilMae>({
         nome: 'Maria da Silva',
         telefone: '(11) 98765-4321',
         endereco: 'Rua das Flores, 123 - São Paulo/SP',
@@ -93,6 +141,22 @@ export default function MaternalDashboard() {
         rendaFamiliar: '2 a 3 salários mínimos',
         necessidadesPrincipais: ['Acompanhamento pediátrico', 'Suplementação alimentar', 'Orientação psicológica']
     });
+
+    // Atualiza o perfil quando o usuário é carregado
+    useEffect(() => {
+        if (currentUser) {
+            setPerfilMae(prev => ({
+                ...prev,
+                nome: currentUser.nome,
+                telefone: currentUser.telefone || prev.telefone,
+                endereco: currentUser.endereco || prev.endereco,
+                situacaoTrabalhista: currentUser.situacaoTrabalho || prev.situacaoTrabalhista,
+                rendaFamiliar: currentUser.rendaMensal ? 
+                    `R$ ${currentUser.rendaMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : 
+                    prev.rendaFamiliar
+            }));
+        }
+    }, [currentUser]);
 
     const [filhos, setFilhos] = useState<Filho[]>([
         {
@@ -153,6 +217,13 @@ export default function MaternalDashboard() {
             resumo: 'Ajuste no plano alimentar para ganho de peso'
         }
     ]);
+
+    // Função de logout
+    const handleLogout = () => {
+        console.log('🚪 Fazendo logout...');
+        logoutLocal();
+        router.push('/login');
+    };
 
     // Funções auxiliares memoizadas
     const getSaudeColor = useMemo(() => (situacao: Filho['situacaoSaude']) => {
@@ -308,34 +379,80 @@ export default function MaternalDashboard() {
         [atendimentos]
     );
 
+    // Tela de loading
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-[#FBF7F1] flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#4B6043] mx-auto mb-4"></div>
+                    <p className="text-gray-600">Carregando dados...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Se não tem usuário, não renderiza nada (está redirecionando)
+    if (!currentUser) {
+        return null;
+    }
+
     return (
-        <div className="min-h-screen bg-[#FBF7F1]">
+        <motion.div 
+            className="min-h-screen bg-[#FBF7F1]"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+        >
             {/* Cabeçalho */}
             <header className="bg-[#475F3C] text-white shadow-lg">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">
                         <div className="flex items-center space-x-4">
-                            <div className="bg-[#E4F0D4] rounded-full p-2">
+                            <motion.div 
+                                className="bg-[#E4F0D4] rounded-full p-2"
+                                whileHover={{ rotate: 360, scale: 1.1 }}
+                                transition={{ duration: 0.6 }}
+                            >
                                 <span className="text-2xl" role="img" aria-label="Família">👩‍👧‍👦</span>
-                            </div>
+                            </motion.div>
                             <div>
-                                <h1 className="text-xl font-bold">Olá, {perfilMae.nome.split(' ')[0]}!</h1>
-                                <p className="text-sm text-green-200">Bem-vinda ao seu espaço</p>
+                                <motion.h1 
+                                    className="text-xl font-bold"
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: 0.3 }}
+                                >
+                                    Olá, {currentUser.nome.split(' ')[0]}!
+                                </motion.h1>
+                                <motion.p 
+                                    className="text-sm text-green-200"
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: 0.4 }}
+                                >
+                                    Bem-vinda ao seu espaço
+                                </motion.p>
                             </div>
                         </div>
                         <div className="flex items-center space-x-4">
-                            <button
+                            <motion.button
                                 aria-label="Notificações"
                                 className="p-2 rounded-full hover:bg-[#3d5235] transition-colors"
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
                             >
                                 <span className="text-xl" role="img" aria-hidden="true">🔔</span>
-                            </button>
-                            <button
-                                aria-label="Perfil"
-                                className="p-2 rounded-full hover:bg-[#3d5235] transition-colors"
+                            </motion.button>
+                            <motion.button
+                                onClick={handleLogout}
+                                className="flex items-center space-x-2 p-2 rounded-full hover:bg-[#3d5235] transition-colors"
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                aria-label="Sair"
                             >
-                                <User size={20} aria-hidden="true" />
-                            </button>
+                                <LogOut size={20} aria-hidden="true" />
+                                <span className="text-sm">Sair</span>
+                            </motion.button>
                         </div>
                     </div>
                 </div>
@@ -346,7 +463,7 @@ export default function MaternalDashboard() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex space-x-8">
                         {tabs.map(tab => (
-                            <button
+                            <motion.button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id as TabType)}
                                 className={`flex items-center space-x-2 py-4 px-2 border-b-2 font-medium text-sm transition-colors ${activeTab === tab.id
@@ -354,10 +471,12 @@ export default function MaternalDashboard() {
                                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                     }`}
                                 aria-current={activeTab === tab.id ? 'page' : undefined}
+                                whileHover={{ y: -2 }}
+                                whileTap={{ scale: 0.95 }}
                             >
                                 {tab.icon}
                                 <span>{tab.label}</span>
-                            </button>
+                            </motion.button>
                         ))}
                     </div>
                 </div>
@@ -367,7 +486,12 @@ export default function MaternalDashboard() {
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Visão Geral */}
                 {activeTab === 'overview' && (
-                    <div className="space-y-6">
+                    <motion.div 
+                        className="space-y-6"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5 }}
+                    >
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                             <StatCard
                                 title="Filhos Cadastrados"
@@ -395,7 +519,13 @@ export default function MaternalDashboard() {
                             />
                         </div>
 
-                        <div className="bg-white rounded-lg shadow-md p-6">
+                        <motion.div 
+                            className="bg-white rounded-lg shadow-md p-6"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2, duration: 0.5 }}
+                            whileHover={{ y: -5, boxShadow: "0 10px 25px rgba(0,0,0,0.1)" }}
+                        >
                             <h2 className="text-xl font-bold text-[#475F3C] mb-4">Seu Perfil</h2>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
@@ -425,13 +555,26 @@ export default function MaternalDashboard() {
                                     </p>
                                 </div>
                             </div>
-                        </div>
+                        </motion.div>
 
-                        <div className="bg-white rounded-lg shadow-md p-6">
+                        <motion.div 
+                            className="bg-white rounded-lg shadow-md p-6"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.4, duration: 0.5 }}
+                            whileHover={{ y: -5, boxShadow: "0 10px 25px rgba(0,0,0,0.1)" }}
+                        >
                             <h2 className="text-xl font-bold text-[#475F3C] mb-4">Próximos Atendimentos</h2>
                             <div className="space-y-3">
-                                {proximosAtendimentos.map(atendimento => (
-                                    <div key={atendimento.id} className="flex items-center justify-between p-3 bg-[#E4F0D4] rounded-lg">
+                                {proximosAtendimentos.map((atendimento, index) => (
+                                    <motion.div 
+                                        key={atendimento.id} 
+                                        className="flex items-center justify-between p-3 bg-[#E4F0D4] rounded-lg"
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: 0.5 + index * 0.1, duration: 0.3 }}
+                                        whileHover={{ scale: 1.02 }}
+                                    >
                                         <div className="flex items-center space-x-3">
                                             <span className="text-xl" role="img" aria-label={atendimento.tipo}>
                                                 {getAtendimentoIcon(atendimento.tipo)}
@@ -447,30 +590,37 @@ export default function MaternalDashboard() {
                                             </p>
                                             <p className="text-sm text-gray-500 capitalize">{atendimento.tipo}</p>
                                         </div>
-                                    </div>
+                                    </motion.div>
                                 ))}
                             </div>
-                        </div>
-                    </div>
+                        </motion.div>
+                    </motion.div>
                 )}
 
-                {/* Meus Filhos */}
+                {/* Outras abas */}
                 {activeTab === 'filhos' && (
-                    <div className="space-y-6">
+                    <motion.div 
+                        className="space-y-6"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5 }}
+                    >
                         <div className="flex justify-between items-center">
                             <h2 className="text-2xl font-bold text-[#475F3C]">Meus Filhos</h2>
-                            <button
+                            <motion.button
                                 onClick={() => {
                                     setSelectedChild(null);
                                     setFormData({});
                                     setShowAddChild(true);
                                 }}
                                 className="bg-[#475F3C] text-white px-4 py-2 rounded-lg hover:bg-[#3d5235] transition-colors flex items-center space-x-2"
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
                                 aria-label="Adicionar filho"
                             >
                                 <Plus size={16} aria-hidden="true" />
                                 <span>Adicionar Filho</span>
-                            </button>
+                            </motion.button>
                         </div>
 
                         {filhos.length === 0 ? (
@@ -479,17 +629,26 @@ export default function MaternalDashboard() {
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {filhos.map(filho => (
-                                    <div key={filho.id} className="bg-white rounded-lg shadow-md p-6">
+                                {filhos.map((filho, index) => (
+                                    <motion.div 
+                                        key={filho.id} 
+                                        className="bg-white rounded-lg shadow-md p-6"
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: index * 0.1, duration: 0.5 }}
+                                        whileHover={{ y: -5, boxShadow: "0 10px 25px rgba(0,0,0,0.1)" }}
+                                    >
                                         <div className="flex items-center justify-between mb-4">
                                             <h3 className="text-lg font-semibold text-gray-900">{filho.nome}</h3>
-                                            <button
+                                            <motion.button
                                                 onClick={() => handleEditChild(filho)}
                                                 className="text-[#475F3C] hover:text-[#3d5235] transition-colors"
+                                                whileHover={{ scale: 1.1 }}
+                                                whileTap={{ scale: 0.9 }}
                                                 aria-label={`Editar ${filho.nome}`}
                                             >
                                                 <Edit2 size={16} aria-hidden="true" />
-                                            </button>
+                                            </motion.button>
                                         </div>
 
                                         <div className="space-y-2">
@@ -520,25 +679,32 @@ export default function MaternalDashboard() {
                                                 </div>
                                             )}
                                         </div>
-                                    </div>
+                                    </motion.div>
                                 ))}
                             </div>
                         )}
-                    </div>
+                    </motion.div>
                 )}
 
                 {/* Encaminhamentos */}
                 {activeTab === 'encaminhamentos' && (
-                    <div className="space-y-6">
+                    <motion.div 
+                        className="space-y-6"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5 }}
+                    >
                         <div className="flex justify-between items-center">
                             <h2 className="text-2xl font-bold text-[#475F3C]">Encaminhamentos</h2>
-                            <button
+                            <motion.button
                                 className="bg-[#475F3C] text-white px-4 py-2 rounded-lg hover:bg-[#3d5235] transition-colors flex items-center space-x-2"
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
                                 aria-label="Solicitar encaminhamento"
                             >
                                 <Plus size={16} aria-hidden="true" />
                                 <span>Solicitar Encaminhamento</span>
-                            </button>
+                            </motion.button>
                         </div>
 
                         {encaminhamentos.length === 0 ? (
@@ -547,8 +713,15 @@ export default function MaternalDashboard() {
                             </div>
                         ) : (
                             <div className="space-y-4">
-                                {encaminhamentos.map(encaminhamento => (
-                                    <div key={encaminhamento.id} className="bg-white rounded-lg shadow-md p-6">
+                                {encaminhamentos.map((encaminhamento, index) => (
+                                    <motion.div 
+                                        key={encaminhamento.id} 
+                                        className="bg-white rounded-lg shadow-md p-6"
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: index * 0.1, duration: 0.5 }}
+                                        whileHover={{ y: -2, boxShadow: "0 8px 20px rgba(0,0,0,0.1)" }}
+                                    >
                                         <div className="flex items-start justify-between mb-4">
                                             <div className="flex items-center space-x-3">
                                                 <span className="text-2xl" role="img" aria-label={encaminhamento.tipo}>
@@ -579,16 +752,21 @@ export default function MaternalDashboard() {
                                                 </p>
                                             </div>
                                         )}
-                                    </div>
+                                    </motion.div>
                                 ))}
                             </div>
                         )}
-                    </div>
+                    </motion.div>
                 )}
 
                 {/* Histórico */}
                 {activeTab === 'historico' && (
-                    <div className="space-y-6">
+                    <motion.div 
+                        className="space-y-6"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5 }}
+                    >
                         <h2 className="text-2xl font-bold text-[#475F3C]">Histórico de Atendimentos</h2>
 
                         {atendimentos.length === 0 ? (
@@ -597,8 +775,15 @@ export default function MaternalDashboard() {
                             </div>
                         ) : (
                             <div className="space-y-4">
-                                {atendimentos.map(atendimento => (
-                                    <div key={atendimento.id} className="bg-white rounded-lg shadow-md p-6">
+                                {atendimentos.map((atendimento, index) => (
+                                    <motion.div 
+                                        key={atendimento.id} 
+                                        className="bg-white rounded-lg shadow-md p-6"
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: index * 0.1, duration: 0.5 }}
+                                        whileHover={{ y: -2, boxShadow: "0 8px 20px rgba(0,0,0,0.1)" }}
+                                    >
                                         <div className="flex items-start justify-between mb-4">
                                             <div className="flex items-center space-x-3">
                                                 <span className="text-2xl" role="img" aria-label={atendimento.tipo}>
@@ -627,18 +812,29 @@ export default function MaternalDashboard() {
                                                 </p>
                                             </div>
                                         )}
-                                    </div>
+                                    </motion.div>
                                 ))}
                             </div>
                         )}
-                    </div>
+                    </motion.div>
                 )}
             </main>
 
             {/* Modal para adicionar/editar filho */}
             {showAddChild && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                <motion.div 
+                    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                >
+                    <motion.div 
+                        className="bg-white rounded-lg p-6 max-w-md w-full mx-4"
+                        initial={{ opacity: 0, scale: 0.9, y: -50 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.9, y: 50 }}
+                        transition={{ duration: 0.3 }}
+                    >
                         <h3 className="text-lg font-semibold text-[#475F3C] mb-4">
                             {selectedChild ? 'Editar Filho' : 'Adicionar Filho'}
                         </h3>
@@ -709,7 +905,7 @@ export default function MaternalDashboard() {
                                 </div>
                             </div>
                             <div className="flex justify-end space-x-3 mt-6">
-                                <button
+                                <motion.button
                                     type="button"
                                     onClick={() => {
                                         setShowAddChild(false);
@@ -718,20 +914,24 @@ export default function MaternalDashboard() {
                                         setFormErrors({});
                                     }}
                                     className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
                                 >
                                     Cancelar
-                                </button>
-                                <button
+                                </motion.button>
+                                <motion.button
                                     type="submit"
                                     className="bg-[#475F3C] text-white px-4 py-2 rounded-lg hover:bg-[#3d5235] transition-colors"
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
                                 >
                                     Salvar
-                                </button>
+                                </motion.button>
                             </div>
                         </form>
-                    </div>
-                </div>
+                    </motion.div>
+                </motion.div>
             )}
-        </div>
+        </motion.div>
     );
 }

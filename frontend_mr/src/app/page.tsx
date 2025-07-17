@@ -19,22 +19,22 @@ export default function Home() {
   }, []);
 
   return <CadastroPage />;
-}
+} 
 
 // Para testar páginas específicas diretamente, descomente as linhas abaixo:
 
-/* 
+
 // 👩‍👧‍👦 Página da Mãe Solo
-import MaePage from "./components/pages/MaePage";
+/*import MaePage from "./components/pages/MaePage";
 export default function Home() {
   return <MaePage />;
 }
 */
 
-/* 
-// 🩺 Página do Profissional
-import ProfissionalPage from "./components/pages/ProfissionalPage";
+// 🩺 Página do Profissiona
+/*import ProfissionalPage from "./components/pages/ProfissionalPage";
 export default function Home() {
   return <ProfissionalPage />;
 }
+
 */
